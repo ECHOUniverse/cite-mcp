@@ -191,6 +191,54 @@ async function getByOpenAlex(doi: string): Promise<PaperDetail | null> {
   }
 }
 
+
+async function getByS2IdsBatch(paperIds: string[]): Promise<PaperDetail[]> {
+  const { apiKey, baseUrl, fields } = config.s2
+  const headers: Record<string, string> = { "Content-Type": "application/json" }
+  if (apiKey) headers["x-api-key"] = apiKey
+
+  const resp = await fetch(
+    `${baseUrl}/paper/batch?fields=${encodeURIComponent(fields)}`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ ids: paperIds.slice(0, 500) }),
+    },
+  )
+  if (!resp.ok) return []
+
+  const data = await resp.json()
+  const results: PaperDetail[] = []
+
+  for (const p of data || []) {
+    if (!p) continue
+    const authors = (p.authors || [])
+      .map((a: any) => a.name)
+      .filter(Boolean)
+      .join("; ")
+
+    const refs = (p.references || []).slice(0, 10).map((r: any) => ({
+      title: r.title || "未知",
+      doi: r.externalIds?.DOI || null,
+      year: r.year || null,
+    }))
+
+    results.push({
+      title: p.title || "",
+      authors,
+      year: p.year || null,
+      abstract: p.abstract || "",
+      doi: p.externalIds?.DOI || null,
+      url: p.url || "",
+      venue: p.venue || null,
+      citationCount: p.citationCount ?? null,
+      references: refs,
+      source: "Semantic Scholar",
+    })
+  }
+  return results
+}
+
 export const get_by_doi = tool({
   description: "通过 DOI 获取论文完整详情，包括标题、作者、年份、摘要、引用数、参考文献等。同时从 Crossref、Semantic Scholar、OpenAlex 三个数据源获取并合并信息。",
   args: {
@@ -248,6 +296,24 @@ export const get_by_s2id = tool({
       return `未找到 Paper ID: ${args.paperId} 对应的论文。`
     }
     return formatDetail(result)
+  },
+})
+
+export const get_by_s2ids_batch = tool({
+  description: "通过 Semantic Scholar Paper ID 批量获取论文详情（最多500个）。适用于需要一次性获取多篇论文详情的场景。",
+  args: {
+    paperIds: tool.schema.array(tool.schema.string()).describe("Semantic Scholar Paper ID 列表（如 CorpusId:12345 或 sha）"),
+  },
+  async execute(args) {
+    const ids = (args.paperIds || []).filter(Boolean)
+    if (ids.length === 0) {
+      return "请提供至少一个 Paper ID。"
+    }
+    const results = await getByS2IdsBatch(ids)
+    if (results.length === 0) {
+      return "未找到任何对应的论文详情。"
+    }
+    return results.map(formatDetail).join("\n\n---\n\n")
   },
 })
 

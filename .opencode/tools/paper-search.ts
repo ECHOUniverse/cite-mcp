@@ -190,9 +190,9 @@ export const search_openalex = tool({
 })
 
 export const search_semantic = tool({
-  description: "通过 Semantic Scholar 搜索学术论文（计算机科学和神经科学特别强）。返回标题、作者、年份、摘要、DOI、引用数等。",
+  description: "通过 Semantic Scholar 搜索学术论文（计算机科学和神经科学特别强）。支持 AND/OR/短语/否定/前缀/模糊/邻近匹配等高级查询语法。返回标题、作者、年份、摘要、DOI、引用数等。",
   args: {
-    query: tool.schema.string().describe("搜索关键词，建议使用英文"),
+    query: tool.schema.string().describe("搜索关键词，建议使用英文。高级语法示例：\"attention mechanism\" AND transformer NOT GPT, climate OR warming, neuro*"),
     limit: tool.schema.number().default(10).describe("返回结果数量，默认10，最大100"),
   },
   async execute(args) {
@@ -215,28 +215,34 @@ export const search_crossref = tool({
 
 export default tool({
   description:
-    "多源学术论文搜索。同时搜索 OpenAlex、Semantic Scholar、Crossref 三个数据库，去重后返回统一结果。推荐优先使用此工具。",
+    "多源学术论文搜索。优先搜索 Semantic Scholar，结果不足时补充 OpenAlex 和 Crossref，去重后返回统一结果。推荐优先使用此工具。",
   args: {
-    query: tool.schema.string().describe("搜索关键词，建议使用英文"),
+    query: tool.schema.string().describe("搜索关键词，建议使用英文。支持 Semantic Scholar 高级语法：AND/OR/短语/否定/前缀/模糊/邻近匹配"),
     limit: tool.schema.number().default(10).describe("每个数据源返回的结果数，默认10"),
   },
   async execute(args) {
     const perSource = args.limit || 10
-    const [oa, s2, cr] = await Promise.allSettled([
-      searchOpenAlex(args.query, perSource),
-      searchSemanticScholar(args.query, perSource),
-      searchCrossref(args.query, perSource),
-    ])
-    const all: PaperResult[] = [
-      ...(oa.status === "fulfilled" ? oa.value : []),
-      ...(s2.status === "fulfilled" ? s2.value : []),
-      ...(cr.status === "fulfilled" ? cr.value : []),
-    ]
-    const deduped = deduplicate(all)
     const errors: string[] = []
-    if (oa.status === "rejected") errors.push(`OpenAlex: ${oa.reason}`)
-    if (s2.status === "rejected") errors.push(`Semantic Scholar: ${s2.reason}`)
-    if (cr.status === "rejected") errors.push(`Crossref: ${cr.reason}`)
+
+    const s2 = await searchSemanticScholar(args.query, perSource).catch((err) => {
+      errors.push(`Semantic Scholar: ${err}`)
+      return []
+    })
+
+    let all: PaperResult[] = [...s2]
+
+    if (all.length < perSource) {
+      const [oa, cr] = await Promise.allSettled([
+        searchOpenAlex(args.query, perSource),
+        searchCrossref(args.query, perSource),
+      ])
+      if (oa.status === "fulfilled") all = all.concat(oa.value)
+      else errors.push(`OpenAlex: ${oa.reason}`)
+      if (cr.status === "fulfilled") all = all.concat(cr.value)
+      else errors.push(`Crossref: ${cr.reason}`)
+    }
+
+    const deduped = deduplicate(all)
 
     let output = formatResults(deduped)
     if (errors.length > 0) {
