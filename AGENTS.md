@@ -5,7 +5,7 @@
 4.禁止擅自开分支：严禁私自创建新 worktree。可以给建议，但必须征得用户明确同意后方可操作。
 5.自检与精简：每次改动后，严格执行「Review查Bug然后第一性原理分析」流程，思考是否有更简单、更稳健的实现。
 6.优先工具调用：我如果有符合用户描述的SKILLS或者MCP，我优先使用这些工具完成任务。
-7.始终文档查询：我遇到不确定的内容会使用find-docs skill去查询文档。
+7.始终文档查询：我遇到不确定的内容会使用context-mcp去查询文档。
 
 ## 开发工作流（Development Workflow）
 1.分析层：文字、图标、颜色的UI修改，直接操作执行层并落地archive。重大重构/多任务才走规划层。
@@ -41,6 +41,6 @@
 ---
 
 ## SKills & MCP
-- find-docs
+- context-mcp
 - github-mcp
 - paper-verify

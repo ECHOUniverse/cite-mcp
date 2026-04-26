@@ -44,5 +44,6 @@ tmp/
 temp/
 .cache/
 
-# OpenCode
-.opencode/node_modules/AGENTS.md
+# OpenCode (migrated to MCP Server)
+.opencode/
+opencode.jsonc
