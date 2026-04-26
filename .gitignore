@@ -12,7 +12,6 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-package-lock.json
 yarn.lock
 .pnpm-debug.log*
 
@@ -47,3 +46,6 @@ temp/
 # OpenCode (migrated to MCP Server)
 .opencode/
 opencode.jsonc
+
+# Claude Code project-local settings
+.claude/

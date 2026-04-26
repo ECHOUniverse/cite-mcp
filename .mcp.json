@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "paper-tools": {
+      "command": "/opt/homebrew/opt/node@24/bin/node",
+      "args": ["/Volumes/WD-1T/00_Workspace/00_Active/CodeProject/text-import-paper/mcp-server/dist/index.js"]
+    }
+  }
+}
