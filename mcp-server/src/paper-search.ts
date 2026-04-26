@@ -177,11 +177,12 @@ function formatResults(papers: PaperResult[]): string {
 }
 
 // Multi-source search: S2 first, fallback to OA+CR if not enough results
-export async function searchPapers(query: string, limit: number): Promise<string> {
+export async function searchPapers(query: string, context: string, limit: number): Promise<string> {
+  const combinedQuery = context ? `${query} ${context}` : query
   const perSource = limit || 10
   const errors: string[] = []
 
-  const s2 = await searchSemanticScholar(query, perSource).catch((err) => {
+  const s2 = await searchSemanticScholar(combinedQuery, perSource).catch((err) => {
     errors.push(`Semantic Scholar: ${err}`)
     return []
   })
@@ -190,8 +191,8 @@ export async function searchPapers(query: string, limit: number): Promise<string
 
   if (all.length < perSource) {
     const [oa, cr] = await Promise.allSettled([
-      searchOpenAlex(query, perSource),
-      searchCrossref(query, perSource),
+      searchOpenAlex(combinedQuery, perSource),
+      searchCrossref(combinedQuery, perSource),
     ])
     if (oa.status === "fulfilled") all = all.concat(oa.value)
     else errors.push(`OpenAlex: ${oa.reason}`)
@@ -208,17 +209,20 @@ export async function searchPapers(query: string, limit: number): Promise<string
   return output
 }
 
-export async function searchSemantic(query: string, limit: number): Promise<string> {
-  const results = await searchSemanticScholar(query, limit || 10)
+export async function searchSemantic(query: string, context: string, limit: number): Promise<string> {
+  const combinedQuery = context ? `${query} ${context}` : query
+  const results = await searchSemanticScholar(combinedQuery, limit || 10)
   return formatResults(results)
 }
 
-export async function searchOpenAlexApi(query: string, limit: number): Promise<string> {
-  const results = await searchOpenAlex(query, limit || 10)
+export async function searchOpenAlexApi(query: string, context: string, limit: number): Promise<string> {
+  const combinedQuery = context ? `${query} ${context}` : query
+  const results = await searchOpenAlex(combinedQuery, limit || 10)
   return formatResults(results)
 }
 
-export async function searchCrossrefApi(query: string, limit: number): Promise<string> {
-  const results = await searchCrossref(query, limit || 10)
+export async function searchCrossrefApi(query: string, context: string, limit: number): Promise<string> {
+  const combinedQuery = context ? `${query} ${context}` : query
+  const results = await searchCrossref(combinedQuery, limit || 10)
   return formatResults(results)
 }

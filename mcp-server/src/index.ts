@@ -36,6 +36,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             type: "string",
             description: "搜索关键词，建议使用英文。支持 Semantic Scholar 高级语法：AND/OR/短语/否定/前缀/模糊/邻近匹配",
           },
+          context: {
+            type: "string",
+            description: "背景上下文信息。描述研究主题、领域或具体方向（如'deep learning, transformer architecture, NLP'），这些额外关键词会被自动附加到搜索词后，帮助提升结果相关性。",
+          },
           limit: {
             type: "number",
             description: "每个数据源返回的结果数，默认10",
@@ -54,6 +58,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           query: {
             type: "string",
             description: "搜索关键词。高级语法示例：\"attention mechanism\" AND transformer NOT GPT, climate OR warming, neuro*",
+          },
+          context: {
+            type: "string",
+            description: "背景上下文信息。描述研究主题、领域或具体方向，这些额外关键词会被自动附加到搜索词后，帮助提升结果相关性。",
           },
           limit: {
             type: "number",
@@ -74,6 +82,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             type: "string",
             description: "搜索关键词，建议使用英文",
           },
+          context: {
+            type: "string",
+            description: "背景上下文信息。描述研究主题、领域或具体方向，这些额外关键词会被自动附加到搜索词后，帮助提升结果相关性。",
+          },
           limit: {
             type: "number",
             description: "返回结果数量，默认10，最大50",
@@ -92,6 +104,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           query: {
             type: "string",
             description: "搜索关键词，建议使用英文",
+          },
+          context: {
+            type: "string",
+            description: "背景上下文信息。描述研究主题、领域或具体方向，这些额外关键词会被自动附加到搜索词后，帮助提升结果相关性。",
           },
           limit: {
             type: "number",
@@ -231,19 +247,35 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     switch (name) {
       // Paper Search
       case "paper_search": {
-        const result = await searchPapers(String(args?.query ?? ""), Number(args?.limit ?? 10))
+        const result = await searchPapers(
+          String(args?.query ?? ""),
+          String(args?.context ?? ""),
+          Number(args?.limit ?? 10),
+        )
         return { content: [{ type: "text", text: result }] }
       }
       case "search_semantic_scholar": {
-        const result = await searchSemantic(String(args?.query ?? ""), Number(args?.limit ?? 10))
+        const result = await searchSemantic(
+          String(args?.query ?? ""),
+          String(args?.context ?? ""),
+          Number(args?.limit ?? 10),
+        )
         return { content: [{ type: "text", text: result }] }
       }
       case "search_openalex": {
-        const result = await searchOpenAlexApi(String(args?.query ?? ""), Number(args?.limit ?? 10))
+        const result = await searchOpenAlexApi(
+          String(args?.query ?? ""),
+          String(args?.context ?? ""),
+          Number(args?.limit ?? 10),
+        )
         return { content: [{ type: "text", text: result }] }
       }
       case "search_crossref": {
-        const result = await searchCrossrefApi(String(args?.query ?? ""), Number(args?.limit ?? 10))
+        const result = await searchCrossrefApi(
+          String(args?.query ?? ""),
+          String(args?.context ?? ""),
+          Number(args?.limit ?? 10),
+        )
         return { content: [{ type: "text", text: result }] }
       }
 
