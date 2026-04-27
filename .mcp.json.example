@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "paper-tools": {
+      "command": "node",
+      "args": ["/absolute/path/to/text-import-paper/mcp-server/dist/index.js"]
+    }
+  }
+}

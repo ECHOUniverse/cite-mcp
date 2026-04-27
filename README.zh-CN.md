@@ -96,29 +96,36 @@ cp .env.example .env
 
 ### 第三步：注册到 MCP 客户端
 
-根据你的客户端选择配置方式：
+项目根目录提供了配置文件模板（`.mcp.json.example`），各客户端配置方式如下：
 
 <details>
 <summary><b>Claude Code（命令行）</b></summary>
 
-在项目根目录创建或编辑 `.mcp.json`：
+复制示例配置文件，然后修改路径：
+
+```bash
+# 在项目根目录执行
+cp .mcp.json.example .mcp.json
+```
+
+编辑 `.mcp.json`，将 `/absolute/path/to/` 替换为你机器上的实际路径。
+
+> 💡 **提示**: 在项目根目录运行 `pwd` 获取绝对路径，拼接 `/mcp-server/dist/index.js` 即可。
+
+最终文件内容类似（具体路径因人而异）：
 
 ```json
 {
   "mcpServers": {
     "paper-tools": {
       "command": "node",
-      "args": ["/绝对路径/mcp-server/dist/index.js"]
+      "args": ["/home/你/projects/text-import-paper/mcp-server/dist/index.js"]
     }
   }
 }
 ```
 
-> ⚠️ 请将 `/绝对路径/` 替换为你机器上的实际路径。
->
-> 在项目根目录运行 `pwd` 获取绝对路径，然后拼接 `/mcp-server/dist/index.js`。
-
-之后在 Claude Code 中直接问 Claude 搜索论文即可。
+配置完成后在 Claude Code 中直接问 Claude 搜索论文即可 — 工具通过 MCP 自动可用。
 </details>
 
 <details>
@@ -136,23 +143,27 @@ cp .env.example .env
   }
 }
 ```
+
+> ⚠️ 将 `/绝对路径/` 替换为实际路径。在项目根目录运行 `pwd` 查看。
 </details>
 
 <details>
 <summary><b>Cursor / Windsurf / 其他 MCP 客户端</b></summary>
 
-大多数兼容 MCP 的 IDE 支持类似配置。填写以下信息：
+大多数兼容 MCP 的 IDE 支持类似配置。填写以下信息注册 `paper-tools`：
 
 | 字段 | 值 |
 |------|-----|
 | 命令 (Command) | `node` |
 | 参数 (Arguments) | `["/绝对路径/mcp-server/dist/index.js"]` |
+
+路径请替换为你的实际路径。
 </details>
 
 <details>
 <summary><b>VS Code（GitHub Copilot + MCP）</b></summary>
 
-在 VS Code 设置 (`settings.json`) 中配置：
+需要 VS Code Insiders。在 VS Code 设置 (`settings.json`) 中配置：
 
 ```json
 {
@@ -166,6 +177,8 @@ cp .env.example .env
   }
 }
 ```
+
+> ⚠️ 将 `/绝对路径/` 替换为实际路径。
 </details>
 
 ### 第四步：试试看！

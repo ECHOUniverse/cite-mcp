@@ -15,6 +15,9 @@ yarn-error.log*
 yarn.lock
 .pnpm-debug.log*
 
+# Machine-specific MCP client config
+.mcp.json
+
 # Environment variables
 .env
 .env.local

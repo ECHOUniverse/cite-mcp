@@ -96,29 +96,36 @@ Edit `.env` with your API keys:
 
 ### Step 3: Register with an MCP Client
 
-Choose your MCP client below:
+An example configuration file (`.mcp.json.example`) is provided in the project root. The steps for each client are below:
 
 <details>
 <summary><b>Claude Code (CLI)</b></summary>
 
-Create or edit `.mcp.json` in your project root:
+Copy the example config and fix the path for your machine:
+
+```bash
+# From the project root
+cp .mcp.json.example .mcp.json
+```
+
+Then edit `.mcp.json` — replace `/absolute/path/to/` with your actual project path.
+
+> 💡 **Tip**: Run `pwd` in the project root to get the absolute path, then append `/mcp-server/dist/index.js`.
+
+The final file should look like this (paths will differ):
 
 ```json
 {
   "mcpServers": {
     "paper-tools": {
       "command": "node",
-      "args": ["/absolute/path/to/mcp-server/dist/index.js"]
+      "args": ["/home/you/projects/text-import-paper/mcp-server/dist/index.js"]
     }
   }
 }
 ```
 
-> ⚠️ Replace `/absolute/path/to/` with the actual path on your machine.
->
-> You can get the absolute path by running `pwd` in the project root, then append `/mcp-server/dist/index.js`.
-
-Then in Claude Code, type `/paper_search` or just ask Claude to search for papers.
+Then in Claude Code, just ask Claude to search for papers — the tools are automatically available via MCP.
 </details>
 
 <details>
@@ -136,23 +143,27 @@ Edit `claude_desktop_config.json` (open via Claude Desktop → Settings → Deve
   }
 }
 ```
+
+> ⚠️ Replace `/absolute/path/to/` with the actual path. Run `pwd` in the project root to find it.
 </details>
 
 <details>
 <summary><b>Cursor / Windsurf / Other MCP Clients</b></summary>
 
-Most MCP-compatible IDEs support a similar configuration. Set the command to:
+Most MCP-compatible IDEs support a similar configuration for the `paper-tools` MCP server. Set:
 
 | Field | Value |
 |-------|-------|
 | Command | `node` |
 | Arguments | `["/absolute/path/to/mcp-server/dist/index.js"]` |
+
+Replace the path with your project's actual path.
 </details>
 
 <details>
 <summary><b>VS Code (GitHub Copilot with MCP)</b></summary>
 
-Configure in VS Code settings (`settings.json`):
+Requires VS Code Insiders. Configure in VS Code settings (`settings.json`):
 
 ```json
 {
@@ -166,6 +177,8 @@ Configure in VS Code settings (`settings.json`):
   }
 }
 ```
+
+> ⚠️ Replace `/absolute/path/to/` with the actual path.
 </details>
 
 ### Step 4: Try It Out!
