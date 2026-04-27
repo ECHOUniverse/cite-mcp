@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">paper-tools-mcp 📄</h1>
   <p align="center"><b>Academic Paper Research MCP Server</b></p>
-  <p align="center">学术论文研究工具 — 搜索 / 详情 / 推荐 / 引文格式化</p>
+  <p align="center"><a href="README.zh-CN.md">🇨🇳 中文</a></p>
 </p>
 
 <p align="center">
@@ -23,15 +23,15 @@
 Think of it as a **USB-C port for AI** — a standard interface that lets any MCP-compatible AI client plug into your tools:
 
 ```
-┌──────────────────┐       ┌───────────────────┐
-│  AI Assistant    │ ◄─MCP─►  This MCP Server  │
-│  (Claude, etc.)  │       │  (paper-tools)    │
-└──────────────────┘       └───────────────────┘
+┌──────────────────┐       ┌───────────────────────┐
+│  AI Assistant    │ ◄─MCP─►  This MCP Server      │
+│  (Claude, etc.)  │       │  (paper-tools)        │
+└──────────────────┘       └───────────────────────┘
                                      │
                     ┌────────────────┼────────────────┐
                     ▼                ▼                ▼
-             Semantic Scholar   OpenAlex        Crossref
-             (2亿+论文)         (2.5亿+工作)     (1.5亿+DOI记录)
+             Semantic Scholar   OpenAlex          Crossref
+             (200M+ papers)    (250M+ works)     (150M+ DOIs)
 ```
 
 This server provides **academic paper research capabilities** — search across multiple databases, get detailed paper info, discover related papers, and format citations — all through natural language conversation.
