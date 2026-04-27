@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "paper-tools": {
+    "cite-mcp": {
       "command": "node",
-      "args": ["/absolute/path/to/text-import-paper/mcp-server/dist/index.js"]
+      "args": ["/absolute/path/to/cite-mcp/mcp-server/dist/index.js"]
     }
   }
 }

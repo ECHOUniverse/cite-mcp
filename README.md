@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">paper-tools-mcp 📄</h1>
+  <h1 align="center">cite-mcp 📄</h1>
   <p align="center"><b>Academic Paper Research MCP Server</b></p>
   <p align="center"><a href="README.zh-CN.md">🇨🇳 中文</a></p>
 </p>
@@ -25,7 +25,7 @@ Think of it as a **USB-C port for AI** — a standard interface that lets any MC
 ```
 ┌──────────────────┐       ┌───────────────────────┐
 │  AI Assistant    │ ◄─MCP─►  This MCP Server      │
-│  (Claude, etc.)  │       │  (paper-tools)        │
+│  (Claude, etc.)  │       │  (cite-mcp)          │
 └──────────────────┘       └───────────────────────┘
                                      │
                     ┌────────────────┼────────────────┐
@@ -63,8 +63,8 @@ This server provides **academic paper research capabilities** — search across 
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/text-import-paper.git
-cd text-import-paper
+git clone https://github.com/your-username/cite-mcp.git
+cd cite-mcp
 
 # Install dependencies in the MCP server directory
 cd mcp-server
@@ -117,9 +117,9 @@ The final file should look like this (paths will differ):
 ```json
 {
   "mcpServers": {
-    "paper-tools": {
+    "cite-mcp": {
       "command": "node",
-      "args": ["/home/you/projects/text-import-paper/mcp-server/dist/index.js"]
+      "args": ["/home/you/projects/cite-mcp/mcp-server/dist/index.js"]
     }
   }
 }
@@ -136,7 +136,7 @@ Edit `claude_desktop_config.json` (open via Claude Desktop → Settings → Deve
 ```json
 {
   "mcpServers": {
-    "paper-tools": {
+    "cite-mcp": {
       "command": "node",
       "args": ["/absolute/path/to/mcp-server/dist/index.js"]
     }
@@ -150,7 +150,7 @@ Edit `claude_desktop_config.json` (open via Claude Desktop → Settings → Deve
 <details>
 <summary><b>Cursor / Windsurf / Other MCP Clients</b></summary>
 
-Most MCP-compatible IDEs support a similar configuration for the `paper-tools` MCP server. Set:
+Most MCP-compatible IDEs support a similar configuration for the `cite-mcp` MCP server. Set:
 
 | Field | Value |
 |-------|-------|
@@ -169,7 +169,7 @@ Requires VS Code Insiders. Configure in VS Code settings (`settings.json`):
 {
   "github.copilot.advanced": {
     "mcpServers": {
-      "paper-tools": {
+      "cite-mcp": {
         "command": "node",
         "args": ["/absolute/path/to/mcp-server/dist/index.js"]
       }

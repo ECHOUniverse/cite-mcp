@@ -13,7 +13,7 @@ import { formatCitation } from "./citation.js"
 
 const server = new Server(
   {
-    name: "paper-tools",
+    name: "cite-mcp",
     version: "1.0.0",
   },
   {

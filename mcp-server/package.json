@@ -1,5 +1,5 @@
 {
-  "name": "paper-tools-mcp",
+  "name": "cite-mcp",
   "version": "1.0.0",
   "description": "MCP Server for academic paper search, detail, recommendations, and citation formatting",
   "type": "module",

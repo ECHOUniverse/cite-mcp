@@ -43,9 +43,9 @@
 - paper-verify
 
 
-# text-import-paper
+# cite-mcp
 
-This project provides **MCP tools for academic paper research** — paper search, detail retrieval, recommendations, and citation formatting. It integrates with Claude Code via the `paper-tools` MCP server.
+This project provides **MCP tools for academic paper research** — paper search, detail retrieval, recommendations, and citation formatting. It integrates with Claude Code via the `cite-mcp` MCP server.
 
 ## MCP Tools Available
 

@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">paper-tools-mcp 📄</h1>
+  <h1 align="center">cite-mcp 📄</h1>
   <p align="center"><b>学术论文研究 MCP 服务器</b></p>
   <p align="center"><a href="README.md">🇬🇧 English</a></p>
 </p>
@@ -25,7 +25,7 @@
 ```
 ┌──────────────────┐       ┌───────────────────────┐
 │   AI 助手         │ ◄─MCP─►  本 MCP 服务器        │
-│  (Claude 等)      │       │  (paper-tools)        │
+│  (Claude 等)      │       │  (cite-mcp)          │
 └──────────────────┘       └───────────────────────┘
                                      │
                     ┌────────────────┼────────────────┐
@@ -63,8 +63,8 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-username/text-import-paper.git
-cd text-import-paper
+git clone https://github.com/your-username/cite-mcp.git
+cd cite-mcp
 
 # 进入 MCP 服务器目录并安装依赖
 cd mcp-server
@@ -117,9 +117,9 @@ cp .mcp.json.example .mcp.json
 ```json
 {
   "mcpServers": {
-    "paper-tools": {
+    "cite-mcp": {
       "command": "node",
-      "args": ["/home/你/projects/text-import-paper/mcp-server/dist/index.js"]
+      "args": ["/home/你/projects/cite-mcp/mcp-server/dist/index.js"]
     }
   }
 }
@@ -136,7 +136,7 @@ cp .mcp.json.example .mcp.json
 ```json
 {
   "mcpServers": {
-    "paper-tools": {
+    "cite-mcp": {
       "command": "node",
       "args": ["/绝对路径/mcp-server/dist/index.js"]
     }
@@ -150,7 +150,7 @@ cp .mcp.json.example .mcp.json
 <details>
 <summary><b>Cursor / Windsurf / 其他 MCP 客户端</b></summary>
 
-大多数兼容 MCP 的 IDE 支持类似配置。填写以下信息注册 `paper-tools`：
+大多数兼容 MCP 的 IDE 支持类似配置。填写以下信息注册 `cite-mcp`：
 
 | 字段 | 值 |
 |------|-----|
@@ -169,7 +169,7 @@ cp .mcp.json.example .mcp.json
 {
   "github.copilot.advanced": {
     "mcpServers": {
-      "paper-tools": {
+      "cite-mcp": {
         "command": "node",
         "args": ["/绝对路径/mcp-server/dist/index.js"]
       }
