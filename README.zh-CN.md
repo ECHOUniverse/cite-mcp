@@ -51,6 +51,52 @@
 
 ## 🚀 快速开始
 
+### 方式一：npx（推荐 — 无需安装）
+
+```bash
+npx cite-mcp
+```
+
+首次运行时 npm 会自动下载并缓存。然后在 MCP 客户端中配置：
+
+```json
+{
+  "mcpServers": {
+    "cite-mcp": {
+      "command": "npx",
+      "args": ["cite-mcp"]
+    }
+  }
+}
+```
+
+> 💡 **API 密钥**: 如需更高调用频率，可设置环境变量 `S2_API_KEY`、`OPENALEX_MAILTO`、`CROSSREF_MAILTO`。详见 [配置说明](#-配置说明)。
+
+### 方式二：全局安装
+
+```bash
+npm install -g cite-mcp
+cite-mcp
+```
+
+MCP 客户端配置：
+
+```json
+{
+  "mcpServers": {
+    "cite-mcp": {
+      "command": "cite-mcp",
+      "args": []
+    }
+  }
+}
+```
+
+### 方式三：从源码构建
+
+<details>
+<summary>点击展开 — 克隆仓库本地编译</summary>
+
 ### 环境要求
 
 - **Node.js** ≥ 18（推荐 22+）
@@ -63,7 +109,7 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-username/cite-mcp.git
+git clone https://github.com/ECHOUniverse/cite-mcp.git
 cd cite-mcp
 
 # 进入 MCP 服务器目录并安装依赖
@@ -98,34 +144,43 @@ cp .env.example .env
 
 项目根目录提供了配置文件模板（`.mcp.json.example`），各客户端配置方式如下：
 
+</details>
+
+### MCP 客户端配置
+
 <details>
 <summary><b>Claude Code（命令行）</b></summary>
 
-复制示例配置文件，然后修改路径：
-
-```bash
-# 在项目根目录执行
-cp .mcp.json.example .mcp.json
-```
-
-编辑 `.mcp.json`，将 `/absolute/path/to/` 替换为你机器上的实际路径。
-
-> 💡 **提示**: 在项目根目录运行 `pwd` 获取绝对路径，拼接 `/mcp-server/dist/index.js` 即可。
-
-最终文件内容类似（具体路径因人而异）：
+推荐使用 npx：
 
 ```json
 {
   "mcpServers": {
     "cite-mcp": {
-      "command": "node",
-      "args": ["/home/你/projects/cite-mcp/mcp-server/dist/index.js"]
+      "command": "npx",
+      "args": ["cite-mcp"]
     }
   }
 }
 ```
 
-配置完成后在 Claude Code 中直接问 Claude 搜索论文即可 — 工具通过 MCP 自动可用。
+或全局安装：
+```json
+{
+  "mcpServers": {
+    "cite-mcp": {
+      "command": "cite-mcp",
+      "args": []
+    }
+  }
+}
+```
+
+或本地构建：
+```bash
+cp .mcp.json.example .mcp.json
+# 编辑 .mcp.json，将路径替换为你机器上的实际路径
+```
 </details>
 
 <details>
@@ -137,27 +192,21 @@ cp .mcp.json.example .mcp.json
 {
   "mcpServers": {
     "cite-mcp": {
-      "command": "node",
-      "args": ["/绝对路径/mcp-server/dist/index.js"]
+      "command": "npx",
+      "args": ["cite-mcp"]
     }
   }
 }
 ```
-
-> ⚠️ 将 `/绝对路径/` 替换为实际路径。在项目根目录运行 `pwd` 查看。
 </details>
 
 <details>
 <summary><b>Cursor / Windsurf / 其他 MCP 客户端</b></summary>
 
-大多数兼容 MCP 的 IDE 支持类似配置。填写以下信息注册 `cite-mcp`：
-
 | 字段 | 值 |
 |------|-----|
-| 命令 (Command) | `node` |
-| 参数 (Arguments) | `["/绝对路径/mcp-server/dist/index.js"]` |
-
-路径请替换为你的实际路径。
+| 命令 (Command) | `npx` |
+| 参数 (Arguments) | `["cite-mcp"]` |
 </details>
 
 <details>
@@ -170,15 +219,13 @@ cp .mcp.json.example .mcp.json
   "github.copilot.advanced": {
     "mcpServers": {
       "cite-mcp": {
-        "command": "node",
-        "args": ["/绝对路径/mcp-server/dist/index.js"]
+        "command": "npx",
+        "args": ["cite-mcp"]
       }
     }
   }
 }
 ```
-
-> ⚠️ 将 `/绝对路径/` 替换为实际路径。
 </details>
 
 ### 第四步：试试看！
@@ -303,6 +350,13 @@ nvm install 22
 
 <details>
 <summary><b>如何更新？</b></summary>
+
+**npm 更新**（推荐 — npx 或全局安装用户）：
+```bash
+npm install -g cite-mcp@latest
+```
+
+**Git 拉取**（本地构建用户）：
 ```bash
 git pull
 cd mcp-server

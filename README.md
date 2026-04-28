@@ -51,6 +51,54 @@ This server provides **academic paper research capabilities** — search across 
 
 ## 🚀 Quick Start
 
+### Option A: npx (Recommended — no install required)
+
+```bash
+npx cite-mcp
+```
+
+That's it. On first run, npm will download and cache the package automatically.
+
+To configure your MCP client, point it to:
+
+```json
+{
+  "mcpServers": {
+    "cite-mcp": {
+      "command": "npx",
+      "args": ["cite-mcp"]
+    }
+  }
+}
+```
+
+> 💡 **API keys**: Set `S2_API_KEY`, `OPENALEX_MAILTO`, `CROSSREF_MAILTO` as environment variables if you want higher rate limits. See [Configuration](#-configuration).
+
+### Option B: Global Install
+
+```bash
+npm install -g cite-mcp
+cite-mcp
+```
+
+Then configure your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "cite-mcp": {
+      "command": "cite-mcp",
+      "args": []
+    }
+  }
+}
+```
+
+### Option C: Build from Source
+
+<details>
+<summary>Click to expand — clone and build locally</summary>
+
 ### Prerequisites
 
 - **Node.js** ≥ 18 (recommended: 22+)
@@ -63,7 +111,7 @@ This server provides **academic paper research capabilities** — search across 
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/cite-mcp.git
+git clone https://github.com/ECHOUniverse/cite-mcp.git
 cd cite-mcp
 
 # Install dependencies in the MCP server directory
@@ -98,34 +146,43 @@ Edit `.env` with your API keys:
 
 An example configuration file (`.mcp.json.example`) is provided in the project root. The steps for each client are below:
 
+</details>
+
+### MCP Client Setup
+
 <details>
 <summary><b>Claude Code (CLI)</b></summary>
 
-Copy the example config and fix the path for your machine:
-
-```bash
-# From the project root
-cp .mcp.json.example .mcp.json
-```
-
-Then edit `.mcp.json` — replace `/absolute/path/to/` with your actual project path.
-
-> 💡 **Tip**: Run `pwd` in the project root to get the absolute path, then append `/mcp-server/dist/index.js`.
-
-The final file should look like this (paths will differ):
+Use npx (recommended):
 
 ```json
 {
   "mcpServers": {
     "cite-mcp": {
-      "command": "node",
-      "args": ["/home/you/projects/cite-mcp/mcp-server/dist/index.js"]
+      "command": "npx",
+      "args": ["cite-mcp"]
     }
   }
 }
 ```
 
-Then in Claude Code, just ask Claude to search for papers — the tools are automatically available via MCP.
+Or with global install:
+```json
+{
+  "mcpServers": {
+    "cite-mcp": {
+      "command": "cite-mcp",
+      "args": []
+    }
+  }
+}
+```
+
+Or with local build:
+```bash
+cp .mcp.json.example .mcp.json
+# Edit .mcp.json — replace /absolute/path/to/ with your actual path
+```
 </details>
 
 <details>
@@ -137,27 +194,21 @@ Edit `claude_desktop_config.json` (open via Claude Desktop → Settings → Deve
 {
   "mcpServers": {
     "cite-mcp": {
-      "command": "node",
-      "args": ["/absolute/path/to/mcp-server/dist/index.js"]
+      "command": "npx",
+      "args": ["cite-mcp"]
     }
   }
 }
 ```
-
-> ⚠️ Replace `/absolute/path/to/` with the actual path. Run `pwd` in the project root to find it.
 </details>
 
 <details>
 <summary><b>Cursor / Windsurf / Other MCP Clients</b></summary>
 
-Most MCP-compatible IDEs support a similar configuration for the `cite-mcp` MCP server. Set:
-
 | Field | Value |
 |-------|-------|
-| Command | `node` |
-| Arguments | `["/absolute/path/to/mcp-server/dist/index.js"]` |
-
-Replace the path with your project's actual path.
+| Command | `npx` |
+| Arguments | `["cite-mcp"]` |
 </details>
 
 <details>
@@ -170,15 +221,13 @@ Requires VS Code Insiders. Configure in VS Code settings (`settings.json`):
   "github.copilot.advanced": {
     "mcpServers": {
       "cite-mcp": {
-        "command": "node",
-        "args": ["/absolute/path/to/mcp-server/dist/index.js"]
+        "command": "npx",
+        "args": ["cite-mcp"]
       }
     }
   }
 }
 ```
-
-> ⚠️ Replace `/absolute/path/to/` with the actual path.
 </details>
 
 ### Step 4: Try It Out!
@@ -303,6 +352,13 @@ Try the following:
 
 <details>
 <summary><b>How to update?</b></summary>
+
+**npm install** (recommended — for npx or global install users):
+```bash
+npm install -g cite-mcp@latest
+```
+
+**Git pull** (for local build users):
 ```bash
 git pull
 cd mcp-server
