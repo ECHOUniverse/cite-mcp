@@ -4,10 +4,36 @@
   "description": "MCP Server for academic paper search, detail, recommendations, and citation formatting",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "cite-mcp": "bin/cite-mcp.js"
+  },
+  "files": [
+    "dist/",
+    "bin/"
+  ],
+  "keywords": [
+    "mcp",
+    "academic-papers",
+    "semantic-scholar",
+    "openalex",
+    "crossref",
+    "citation",
+    "paper-search",
+    "model-context-protocol"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ECHOUniverse/cite-mcp"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.13.0"
