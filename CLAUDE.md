@@ -6,6 +6,7 @@
 5.自检与精简：每次改动后，严格执行「Review查Bug然后第一性原理分析」流程，思考是否有更简单、更稳健的实现。
 6.优先工具调用：我如果有符合用户描述的SKILLS或者MCP，我优先使用这些工具完成任务。
 7.始终文档查询：我遇到不确定的内容会使用context-mcp去查询文档。
+8.使用中文逻辑思考问题。
 
 ## 开发工作流（Development Workflow）
 1.分析层：文字、图标、颜色的UI修改，直接操作执行层并落地archive。重大重构/多任务才走规划层。
@@ -37,40 +38,90 @@
 以下可以加入内容并作出修改
 ---
 
-## SKills & MCP
-- context-mcp
-- github-mcp
-- paper-verify
+## Skills & MCP 索引
+- `cite-mcp` — 学术论文研究工具集（见下方详细指南）
+- `context-mcp` — 库/框架文档查询
+- `github-mcp` — GitHub 操作
+- `paper-verify` — 论文论据验证工作流
 
+---
 
-# cite-mcp
+# cite-mcp 使用指南
 
-This project provides **MCP tools for academic paper research** — paper search, detail retrieval, recommendations, and citation formatting. It integrates with Claude Code via the `cite-mcp` MCP server.
+## 工具速览
 
-## MCP Tools Available
+| 工具 | 输入 | 输出 | 推荐场景 |
+|------|------|------|----------|
+| `paper_search` | query+context+limit | 多源聚合论文列表 | **首选搜索**，一步覆盖 S2+OA+CR |
+| `search_semantic_scholar` | query+context+limit | S2 论文列表 | 计算机科学/AI/NLP，需高级语法 |
+| `search_openalex` | query+context+limit | OA 论文列表 | 跨学科广泛搜索 |
+| `search_crossref` | query+context+limit | CR 论文列表 | 验证 DOI 元数据 |
+| `paper_detail` | doi | 论文完整详情+参考文献 | 拿到 DOI 后查详情 |
+| `get_by_s2id` | paperId | S2 单篇详情 | 搜索结果直接点进去 |
+| `get_by_s2ids_batch` | paperIds[] | 批量 S2 详情 | 批量处理（最多500） |
+| `paper_recommendations` | paperId+limit+from | 相关论文推荐 | 找拓展阅读 |
+| `paper_analysis` | query+count+context | 横向对比+逐篇分析 | **文献综述**，快速了解一个方向 |
+| `citation` | authors+title+year... | 格式化引文 | 最终输出引用 |
 
-### Paper Search
-- `paper_search` — 多源聚合搜索 (S2 + OA + CR, deduplicated)
-- `search_semantic_scholar` — Semantic Scholar 单源搜索，支持高级语法 (AND/OR/NOT/短语/前缀)
-- `search_openalex` — OpenAlex 单源搜索（全学科）
-- `search_crossref` — Crossref 单源搜索（DOI 元数据最权威）
+## 工具选择决策逻辑
 
-### Paper Detail
-- `paper_detail` — 通过 DOI 获取论文详情（多源合并，含摘要、参考文献）
-- `get_by_s2id` — 通过 S2 Paper ID 获取论文详情
-- `get_by_s2ids_batch` — 批量获取 S2 论文详情（最多500个）
+用户说 → 你做什么：
 
-### Paper Recommendations
-- `paper_recommendations` — 基于已知论文获取 S2 推荐
+```
+用户说「搜一下 XX 方向的论文」
+  → paper_search(query=XX, context=领域描述, limit=10)
+  → 需要更深？paper_detail(doi=...)
+  → 需要拓展？paper_recommendations(paperId=...)
 
-### Citation
-- `citation` — APA 7th / MLA 9th / GB/T 7714-2015 / BibTeX 格式化
+用户说「帮我了解下 XX 领域的研究现状」
+  → paper_analysis(query=XX, count=5, context=领域描述)
+  → 一次返回概览表+每篇详细分析
+
+用户说「验证这段话的引用是否可靠」
+  → paper-verify 工作流（见下方 Protocols）
+
+用户说「帮我生成参考文献」
+  → citation(authors=..., title=..., year=..., venue=..., style=apa)
+
+用户说「这篇论文具体内容是什么」
+  → paper_detail(doi=...)
+  → 或者 get_by_s2id(paperId=...) 如果只有 S2 ID
+```
+
+## 关键参数技巧
+
+- **`context` 参数**：所有搜索工具都有此参数。描述研究主题/领域背景，会自动附加到搜索词后提升相关性。例：query=`transformer` + context=`NLP, deep learning, attention mechanism`
+- **`limit` 参数**：搜索默认 10 条。`paper_recommendations` 和 `get_by_s2ids_batch` 最大 500
+- **`from` 参数**（`paper_recommendations`）：`recent`=近期论文（默认），`all-cs`=全部计算机科学论文
+
+## 典型工作流
+
+### 工作流 A：文献调研
+```
+paper_search(query, context) → 拿到候选列表
+  → paper_detail(doi) → 查看摘要+引用
+  → paper_recommendations(paperId) → 拓展发现
+  → 循环直到覆盖足够
+```
+
+### 工作流 B：快速文献综述
+```
+paper_analysis(query, count=5, context) → 概览表+逐篇分析
+  → 对感兴趣的：paper_detail(doi) → 深度阅读
+```
+
+### 工作流 C：论据验证（paper-verify）
+```
+提取论点 → search_semantic_scholar(正向) + paper_search(反向, 用否定词)
+  → 分级 A/B/C + 争议标记
+  → citation(格式) → 输出验证报告
+```
 
 ---
 
 ## Protocols
 
-### Paper Claim Verification (paper-verify)
+### Paper Claim Verification（paper-verify）
 
 当用户要求验证论文段落、查找支持文献、寻找引用时，使用以下工作流。
 
@@ -93,11 +144,10 @@ This project provides **MCP tools for academic paper research** — paper search
 - 结果不足时补充 `paper_search`（多源聚合）
 
 **反向搜索**（争议检测）:
-- `paper_search` + 否定性关键词：`limitations/challenge/refute/contradict`
+- `paper_search` + 否定性关键词：limitations/challenge/refute/contradict
 
 #### Step 3: 验证与分级
 
-**证据分级**:
 | 级别 | 标准 |
 |------|------|
 | A级 | 摘要明确验证论点，且为论文核心贡献 |
@@ -106,11 +156,10 @@ This project provides **MCP tools for academic paper research** — paper search
 
 **争议标记**: 反向搜索发现强相关反驳文献 → 标记「存在学术争议」，列出双方最高质量文献
 
-**格式化引文**: 对验证通过的文献，调用 `citation` 工具即可
+**格式化引文**: 对验证通过的文献，调用 `citation` 工具
 
 #### Step 4: 输出报告
 
-格式：
 ```
 ## 论点验证报告
 

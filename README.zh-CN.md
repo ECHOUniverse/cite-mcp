@@ -45,6 +45,7 @@
 | 🔍 **多源搜索** | Semantic Scholar + OpenAlex + Crossref | 聚合搜索，自动去重 |
 | 📖 **论文详情** | 合并 3 个数据源 | 标题、作者、摘要、参考文献、引用数 |
 | 🎯 **论文推荐** | Semantic Scholar | 基于已知论文发现相关文献 |
+| 📊 **文献分析** | Semantic Scholar + OpenAlex + Crossref | 横向对比概览表 + 每篇文献总结和数据表 |
 | 📝 **引文格式化** | — | APA 7th / MLA 9th / GB/T 7714-2015 / BibTeX |
 
 ---
@@ -296,6 +297,12 @@ export CROSSREF_MAILTO="你的@邮箱.com"
 | `"..."` | `"attention mechanism"` | 精确短语匹配 |
 | `neuro*` | `neuro*` | 前缀匹配（neural, neuroscience...） |
 | `title:` | `title:transformer` | 仅在标题中搜索 |
+
+### 分析工具
+
+| 工具 | 说明 |
+|------|------|
+| `paper_analysis` | 搜索指定数量的文献，返回横向对比概览表 + 每篇文献的总结和数据性能表。适合快速文献综述。 |
 
 ### 详情工具
 

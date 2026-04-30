@@ -45,6 +45,7 @@ This server provides **academic paper research capabilities** — search across 
 | 🔍 **Multi-Source Search** | Semantic Scholar + OpenAlex + Crossref | Aggregate search with automatic deduplication |
 | 📖 **Paper Detail** | 3 sources merged | Title, authors, abstract, references, citation count |
 | 🎯 **Recommendations** | Semantic Scholar | Related paper discovery |
+| 📊 **Paper Analysis** | Semantic Scholar + OpenAlex + Crossref | Cross-paper comparison table + per-paper summaries |
 | 📝 **Citation Formatting** | — | APA 7th / MLA 9th / GB/T 7714-2015 / BibTeX |
 
 ---
@@ -298,6 +299,12 @@ Place your `.env` at either location. The file is already in `.gitignore`, so yo
 | `"..."` | `"attention mechanism"` | Exact phrase |
 | `neuro*` | `neuro*` | Prefix match (neural, neuroscience...) |
 | `title:` | `title:transformer` | Search in title only |
+
+### Analysis Tool
+
+| Tool | Description |
+|------|-------------|
+| `paper_analysis` | Search specified number of papers, return cross-paper overview table + per-paper summaries and data tables. Great for quick literature review. |
 
 ### Detail Tools
 
