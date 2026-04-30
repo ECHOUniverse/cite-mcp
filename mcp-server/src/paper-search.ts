@@ -12,7 +12,7 @@ export interface PaperResult {
   venue: string | null
 }
 
-async function searchOpenAlex(query: string, limit: number): Promise<PaperResult[]> {
+export async function searchOpenAlex(query: string, limit: number): Promise<PaperResult[]> {
   const { mailto, baseUrl } = config.openalex
   const params = new URLSearchParams({
     search: query,
@@ -64,7 +64,7 @@ async function searchOpenAlex(query: string, limit: number): Promise<PaperResult
   return results
 }
 
-async function searchSemanticScholar(query: string, limit: number): Promise<PaperResult[]> {
+export async function searchSemanticScholar(query: string, limit: number): Promise<PaperResult[]> {
   const { apiKey, baseUrl } = config.s2
   const params = new URLSearchParams({
     query,
@@ -105,7 +105,7 @@ async function searchSemanticScholar(query: string, limit: number): Promise<Pape
   return results
 }
 
-async function searchCrossref(query: string, limit: number): Promise<PaperResult[]> {
+export async function searchCrossref(query: string, limit: number): Promise<PaperResult[]> {
   const { baseUrl, mailto } = config.crossref
   const params = new URLSearchParams({
     query,
@@ -142,7 +142,7 @@ async function searchCrossref(query: string, limit: number): Promise<PaperResult
   return results
 }
 
-function deduplicate(papers: PaperResult[]): PaperResult[] {
+export function deduplicate(papers: PaperResult[]): PaperResult[] {
   const seen = new Set<string>()
   return papers.filter((p) => {
     const key = p.doi ? `doi:${p.doi}` : `${p.title}:${p.year}`

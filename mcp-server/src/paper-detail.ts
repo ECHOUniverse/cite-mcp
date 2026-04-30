@@ -1,6 +1,6 @@
 import { config } from "./config.js"
 
-interface PaperDetail {
+export interface PaperDetail {
   title: string
   authors: string
   year: number | null
@@ -37,7 +37,7 @@ function formatDetail(p: PaperDetail): string {
   return lines.join("\n")
 }
 
-async function getByDoiCrossref(doi: string): Promise<PaperDetail | null> {
+export async function getByDoiCrossref(doi: string): Promise<PaperDetail | null> {
   const resp = await fetch(`${config.crossref.baseUrl}/${encodeURIComponent(doi)}`)
   if (!resp.ok) return null
 
@@ -70,7 +70,7 @@ async function getByDoiCrossref(doi: string): Promise<PaperDetail | null> {
   }
 }
 
-async function getByDoiSemantic(doi: string): Promise<PaperDetail | null> {
+export async function getByDoiSemantic(doi: string): Promise<PaperDetail | null> {
   const { apiKey, baseUrl, fields } = config.s2
   const headers: Record<string, string> = {}
   if (apiKey) headers["x-api-key"] = apiKey
@@ -107,7 +107,7 @@ async function getByDoiSemantic(doi: string): Promise<PaperDetail | null> {
   }
 }
 
-async function getByOpenAlex(doi: string): Promise<PaperDetail | null> {
+export async function getByOpenAlex(doi: string): Promise<PaperDetail | null> {
   const { mailto, baseUrl } = config.openalex
   const url = `${baseUrl}/works/doi:${encodeURIComponent(doi)}${mailto ? `?mailto=${mailto}` : ""}`
   const resp = await fetch(url)
@@ -235,6 +235,27 @@ async function getByS2IdsBatch(paperIds: string[]): Promise<PaperDetail[]> {
     })
   }
   return results
+}
+
+// -- Raw data export for internal reuse --
+
+export async function getPaperDetailRaw(doi: string): Promise<PaperDetail | null> {
+  const cleanDoi = doi.trim().replace(/^https?:\/\/doi\.org\//, "")
+
+  const [cr, s2, oa] = await Promise.allSettled([
+    getByDoiCrossref(cleanDoi),
+    getByDoiSemantic(cleanDoi),
+    getByOpenAlex(cleanDoi),
+  ])
+
+  const results: PaperDetail[] = [
+    ...(cr.status === "fulfilled" && cr.value ? [cr.value] : []),
+    ...(s2.status === "fulfilled" && s2.value ? [s2.value] : []),
+    ...(oa.status === "fulfilled" && oa.value ? [oa.value] : []),
+  ]
+
+  if (results.length === 0) return null
+  return results.find((r) => r.abstract && r.abstract.length > 50) || results[0]
 }
 
 // -- Exported tools --

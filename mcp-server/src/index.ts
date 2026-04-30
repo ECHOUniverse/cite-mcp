@@ -10,6 +10,7 @@ import { searchPapers, searchSemantic, searchOpenAlexApi, searchCrossrefApi } fr
 import { getPaperDetail, getPaperDetailByS2Id, getPaperDetailBatch } from "./paper-detail.js"
 import { getPaperRecommendations } from "./paper-recommendations.js"
 import { formatCitation } from "./citation.js"
+import { analyzePapers } from "./paper-analysis.js"
 
 const server = new Server(
   {
@@ -237,6 +238,30 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ["authors", "title", "year", "venue"],
       },
     },
+    // --- Paper Analysis Tool ---
+    {
+      name: "paper_analysis",
+      description: "文献综合分析：搜索指定数量的高匹配文献，返回横向对比概览表 + 每篇文献的总结和数据性能表。",
+      inputSchema: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description: "搜索关键词，建议使用英文",
+          },
+          count: {
+            type: "number",
+            description: "需要分析的文献数量，默认5",
+            default: 5,
+          },
+          context: {
+            type: "string",
+            description: "背景上下文信息，描述研究主题或领域，会自动附加到搜索词后提升相关性",
+          },
+        },
+        required: ["query"],
+      },
+    },
   ],
 }))
 
@@ -317,6 +342,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           pages: args?.pages ? String(args.pages) : undefined,
           style: args?.style ? String(args.style) : undefined,
         })
+        return { content: [{ type: "text", text: result }] }
+      }
+
+      // Paper Analysis
+      case "paper_analysis": {
+        const result = await analyzePapers(
+          String(args?.query ?? ""),
+          Number(args?.count ?? 5),
+          String(args?.context ?? ""),
+        )
         return { content: [{ type: "text", text: result }] }
       }
 
