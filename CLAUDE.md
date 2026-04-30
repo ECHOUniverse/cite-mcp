@@ -187,3 +187,13 @@ paper_analysis(query, count=5, context) → 概览表+逐篇分析
 | 计算机科学 | `search_semantic_scholar` → `paper_search` |
 | 生物医学 | `search_semantic_scholar` → `paper_search` |
 | 交叉学科 | `paper_search`（多源搜索） |
+
+## npm 发布
+
+发布 npm 包（token 在 `~/.npmrc` 中配置）：
+
+```bash
+cd mcp-server && npm publish
+```
+
+会自动执行 `prepublishOnly` 脚本（`npm run build`）后再发布。

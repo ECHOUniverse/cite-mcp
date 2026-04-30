@@ -52,3 +52,6 @@ opencode.jsonc
 
 # Claude Code project-local settings
 .claude/
+
+# npm project-level config (may contain auth tokens)
+.npmrc
