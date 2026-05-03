@@ -53,5 +53,8 @@ opencode.jsonc
 # Claude Code project-local settings
 .claude/
 
+# Claude Code project instructions (local override)
+/CLAUDE.md
+
 # npm project-level config (may contain auth tokens)
 .npmrc
