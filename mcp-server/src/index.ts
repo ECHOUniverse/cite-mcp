@@ -29,7 +29,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     // --- Paper Search Tools ---
     {
       name: "paper_search",
-      description: "多源学术论文搜索。优先搜索 Semantic Scholar，结果不足时补充 OpenAlex 和 Crossref，去重后返回统一结果。推荐优先使用此工具。",
+      description: "【首选搜索】多源聚合搜索：同时搜索 Semantic Scholar、OpenAlex 和 Crossref，去重后返回统一结果。适用于通用/跨学科搜索场景。用户说「搜一下 XX 方向的论文」时建议优先使用。三个单源工具（search_semantic_scholar、search_openalex、search_crossref）仅在需要特定数据源的专有能力时使用。",
       inputSchema: {
         type: "object",
         properties: {
@@ -52,7 +52,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "search_semantic_scholar",
-      description: "通过 Semantic Scholar 搜索学术论文（计算机科学和神经科学特别强）。支持 AND/OR/短语/否定/前缀/模糊/邻近匹配等高级查询语法。",
+      description: "通过 Semantic Scholar 搜索学术论文。计算机科学（CS/AI/NLP）、神经科学领域首选。支持高级查询语法：AND/OR/短语/否定/前缀/模糊/邻近匹配。当需要精确查询语法或专注于 CS/AI/NLP 领域时使用此工具。通用搜索场景推荐使用 paper_search（多源聚合）。",
       inputSchema: {
         type: "object",
         properties: {
@@ -62,7 +62,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
           context: {
             type: "string",
-            description: "背景上下文信息。描述研究主题、领域或具体方向，这些额外关键词会被自动附加到搜索词后，帮助提升结果相关性。",
+            description: "背景上下文信息。描述研究主题、领域或具体方向（如'deep learning, transformer architecture, NLP'），这些额外关键词会被自动附加到搜索词后，帮助提升结果相关性。",
           },
           limit: {
             type: "number",
@@ -75,7 +75,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "search_openalex",
-      description: "通过 OpenAlex 搜索学术论文（全学科通用，2.5亿+工作）。",
+      description: "通过 OpenAlex 搜索学术论文。全学科通用，覆盖 2.5 亿+ 学术作品。适用于跨学科广泛搜索，特别是在 Semantic Scholar 覆盖不足的学科领域。通用搜索场景推荐使用 paper_search（多源聚合）。",
       inputSchema: {
         type: "object",
         properties: {
@@ -85,7 +85,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
           context: {
             type: "string",
-            description: "背景上下文信息。描述研究主题、领域或具体方向，这些额外关键词会被自动附加到搜索词后，帮助提升结果相关性。",
+            description: "背景上下文信息。描述研究主题、领域或具体方向（如'deep learning, transformer architecture, NLP'），这些额外关键词会被自动附加到搜索词后，帮助提升结果相关性。",
           },
           limit: {
             type: "number",
@@ -98,7 +98,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "search_crossref",
-      description: "通过 Crossref 搜索学术论文（DOI 元数据最权威）。",
+      description: "通过 Crossref 搜索学术论文。DOI 元数据最权威的数据源，适合验证论文元数据准确性或查找 DOI 信息。通用搜索场景推荐使用 paper_search（多源聚合）。",
       inputSchema: {
         type: "object",
         properties: {
@@ -108,7 +108,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
           context: {
             type: "string",
-            description: "背景上下文信息。描述研究主题、领域或具体方向，这些额外关键词会被自动附加到搜索词后，帮助提升结果相关性。",
+            description: "背景上下文信息。描述研究主题、领域或具体方向（如'deep learning, transformer architecture, NLP'），这些额外关键词会被自动附加到搜索词后，帮助提升结果相关性。",
           },
           limit: {
             type: "number",
@@ -122,7 +122,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     // --- Paper Detail Tools ---
     {
       name: "paper_detail",
-      description: "通过 DOI 获取论文完整详情（多源合并），包括标题、作者、年份、摘要、引用数、参考文献等。同时从 Crossref、Semantic Scholar、OpenAlex 三个数据源获取并合并信息。",
+      description: "通过 DOI 获取论文完整详情（多源合并：Crossref + Semantic Scholar + OpenAlex）。返回标题、作者、年份、摘要、引用数、参考文献等完整信息。用户说「这篇论文具体内容是什么」时使用此工具（如果有 DOI），或使用 get_by_s2id（如果只有 S2 Paper ID）。在搜索获取候选列表后，对感兴趣的论文使用此工具查看详情。",
       inputSchema: {
         type: "object",
         properties: {
@@ -136,7 +136,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "get_by_s2id",
-      description: "通过 Semantic Scholar Paper ID 获取论文详情。适用于搜索结果返回的 S2 paperId。",
+      description: "通过 Semantic Scholar Paper ID 获取单篇论文详情。适用于从搜索结果或推荐结果中直接查看某篇论文的详细信息。如果只有 DOI 则使用 paper_detail。功能同 paper_detail 但通过 S2 ID 而非 DOI 访问。",
       inputSchema: {
         type: "object",
         properties: {
@@ -150,7 +150,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "get_by_s2ids_batch",
-      description: "通过 Semantic Scholar Paper ID 批量获取论文详情（最多500个）。",
+      description: "通过 Semantic Scholar Paper ID 批量获取多篇论文详情。一次最多处理 500 个 Paper ID。适用于需要同时获取多篇论文详细信息的场景，如批量文献整理。如只需单篇，使用 get_by_s2id。",
       inputSchema: {
         type: "object",
         properties: {
@@ -166,7 +166,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     // --- Paper Recommendation Tool ---
     {
       name: "paper_recommendations",
-      description: "基于一篇已知论文的 Semantic Scholar Paper ID，获取相关推荐论文。",
+      description: "基于已知论文的 Semantic Scholar Paper ID 获取相关推荐论文。用于拓展阅读、发现更多相关文献。在文献调研工作流中，通常放在 paper_search 和 paper_detail 之后使用，形成「搜索→查看→推荐拓展」的闭环。",
       inputSchema: {
         type: "object",
         properties: {
@@ -181,7 +181,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
           from: {
             type: "string",
-            description: "推荐来源池：recent（近期论文）或 all-cs（全部计算机科学论文）",
+            description: "推荐来源池选项：recent（默认值，仅返回近期发表的相关论文，时效性好）；all-cs（从全部计算机科学论文中推荐，覆盖面更广但可能包含旧论文）",
             enum: ["recent", "all-cs"],
             default: "recent",
           },
@@ -192,7 +192,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     // --- Citation Tool ---
     {
       name: "citation",
-      description: "格式化学术引文。支持 APA 7th、MLA 9th、GB/T 7714-2015、BibTeX 四种格式。",
+      description: "格式化学术引文生成。支持 APA 7th、MLA 9th、GB/T 7714-2015（中国标准）、BibTeX 四种格式。用户说「帮我生成参考文献」时使用此工具。通常在论文搜索/获取详情后，对最终采用的文献生成格式化学术引用。",
       inputSchema: {
         type: "object",
         properties: {
@@ -241,7 +241,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     // --- Paper Analysis Tool ---
     {
       name: "paper_analysis",
-      description: "文献综合分析：搜索指定数量的高匹配文献，返回横向对比概览表 + 每篇文献的总结和数据性能表。",
+      description: "【文献综述首选】文献综合分析：搜索指定数量的高匹配文献，自动生成横向对比概览表 + 每篇文献的详细总结和数据性能表。用户说「帮我了解下 XX 领域的研究现状」时使用此工具。与 paper_search 的区别：paper_search 返回论文列表，paper_analysis 返回带对比分析和总结的综合报告，适合快速了解一个研究方向的全貌。",
       inputSchema: {
         type: "object",
         properties: {
@@ -256,7 +256,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
           context: {
             type: "string",
-            description: "背景上下文信息，描述研究主题或领域，会自动附加到搜索词后提升相关性",
+            description: "背景上下文信息。描述研究主题、领域或具体方向（如'deep learning, transformer architecture, NLP'），这些额外关键词会被自动附加到搜索词后，帮助提升结果相关性。",
           },
         },
         required: ["query"],

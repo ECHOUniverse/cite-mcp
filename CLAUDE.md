@@ -30,8 +30,7 @@
 3.表格化输出：多数内容（尤其是评审、对比、多项任务）必须以 Markdown 表格输出。
 4.强制收口：结束对话必须明确告知用到的 skill。
 5.我始终使用中文回答用户的问题。
-6.我始终使用question tool询问用户问题，采访用户的想法和需求并整理，直到计划清晰明了，并记录总结。
-7.我不会使用question tool询问用户是否执行任务。
+6.我始终询问用户问题，采访用户的想法和需求并整理，直到计划清晰明了，并记录总结。
 
 ---
 不允许对以上内容作出修改。
@@ -47,52 +46,6 @@
 ---
 
 # cite-mcp 使用指南
-
-## 工具速览
-
-| 工具 | 输入 | 输出 | 推荐场景 |
-|------|------|------|----------|
-| `paper_search` | query+context+limit | 多源聚合论文列表 | **首选搜索**，一步覆盖 S2+OA+CR |
-| `search_semantic_scholar` | query+context+limit | S2 论文列表 | 计算机科学/AI/NLP，需高级语法 |
-| `search_openalex` | query+context+limit | OA 论文列表 | 跨学科广泛搜索 |
-| `search_crossref` | query+context+limit | CR 论文列表 | 验证 DOI 元数据 |
-| `paper_detail` | doi | 论文完整详情+参考文献 | 拿到 DOI 后查详情 |
-| `get_by_s2id` | paperId | S2 单篇详情 | 搜索结果直接点进去 |
-| `get_by_s2ids_batch` | paperIds[] | 批量 S2 详情 | 批量处理（最多500） |
-| `paper_recommendations` | paperId+limit+from | 相关论文推荐 | 找拓展阅读 |
-| `paper_analysis` | query+count+context | 横向对比+逐篇分析 | **文献综述**，快速了解一个方向 |
-| `citation` | authors+title+year... | 格式化引文 | 最终输出引用 |
-
-## 工具选择决策逻辑
-
-用户说 → 你做什么：
-
-```
-用户说「搜一下 XX 方向的论文」
-  → paper_search(query=XX, context=领域描述, limit=10)
-  → 需要更深？paper_detail(doi=...)
-  → 需要拓展？paper_recommendations(paperId=...)
-
-用户说「帮我了解下 XX 领域的研究现状」
-  → paper_analysis(query=XX, count=5, context=领域描述)
-  → 一次返回概览表+每篇详细分析
-
-用户说「验证这段话的引用是否可靠」
-  → paper-verify 工作流（见下方 Protocols）
-
-用户说「帮我生成参考文献」
-  → citation(authors=..., title=..., year=..., venue=..., style=apa)
-
-用户说「这篇论文具体内容是什么」
-  → paper_detail(doi=...)
-  → 或者 get_by_s2id(paperId=...) 如果只有 S2 ID
-```
-
-## 关键参数技巧
-
-- **`context` 参数**：所有搜索工具都有此参数。描述研究主题/领域背景，会自动附加到搜索词后提升相关性。例：query=`transformer` + context=`NLP, deep learning, attention mechanism`
-- **`limit` 参数**：搜索默认 10 条。`paper_recommendations` 和 `get_by_s2ids_batch` 最大 500
-- **`from` 参数**（`paper_recommendations`）：`recent`=近期论文（默认），`all-cs`=全部计算机科学论文
 
 ## 典型工作流
 
@@ -178,15 +131,6 @@ paper_analysis(query, count=5, context) → 概览表+逐篇分析
 - URL: xxx
 - 引用数: xx
 ```
-
-### Search Strategy Guide
-
-| 学科 | 优先数据源 |
-|------|-----------|
-| 通用/默认 | `search_semantic_scholar` → `paper_search` |
-| 计算机科学 | `search_semantic_scholar` → `paper_search` |
-| 生物医学 | `search_semantic_scholar` → `paper_search` |
-| 交叉学科 | `paper_search`（多源搜索） |
 
 ## npm 发布
 
