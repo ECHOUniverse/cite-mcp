@@ -9,7 +9,7 @@ import "./config.js"
 import { searchPapers, searchSemantic, searchOpenAlexApi, searchCrossrefApi } from "./paper-search.js"
 import { getPaperDetail, getPaperDetailByS2Id, getPaperDetailBatch } from "./paper-detail.js"
 import { getPaperRecommendations } from "./paper-recommendations.js"
-import { formatCitation } from "./citation.js"
+import { formatCitation, formatCitationReport } from "./citation.js"
 import { analyzePapers } from "./paper-analysis.js"
 
 const server = new Server(
@@ -192,50 +192,45 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     // --- Citation Tool ---
     {
       name: "citation",
-      description: "格式化学术引文生成。支持 APA 7th、MLA 9th、GB/T 7714-2015（中国标准）、BibTeX 四种格式。用户说「帮我生成参考文献」时使用此工具。通常在论文搜索/获取详情后，对最终采用的文献生成格式化学术引用。",
+      description: "格式化学术引文生成与报告。支持 APA 7th、MLA 9th、GB/T 7714-2015（中国标准）、BibTeX 及 Elsevier 编号格式。默认 Elsevier 格式接受多篇论文输入，输出三段式 Markdown 报告（正文引用编号 + 参考文献表含 URL + 引文说明表）。用户说「帮我生成参考文献」时使用此工具。",
       inputSchema: {
         type: "object",
         properties: {
-          authors: {
-            type: "string",
-            description: "作者列表，格式：Smith, J.; Doe, A.",
+          papers: {
+            type: "array",
+            description: "论文列表（Elsevier 报告模式使用）。每项包含 authors, title, year, venue（必填）及 doi, volume, issue, pages, originalTextSummary, description（选填）。提供此参数时将输出三段式报告。",
+            items: {
+              type: "object",
+              properties: {
+                authors: { type: "string", description: "作者列表，格式：Smith, J.; Doe, A." },
+                title: { type: "string", description: "论文标题" },
+                year: { type: "number", description: "发表年份" },
+                venue: { type: "string", description: "期刊/会议名称" },
+                doi: { type: "string", description: "DOI标识符（不含 https://doi.org/ 前缀）" },
+                volume: { type: "string", description: "卷号" },
+                issue: { type: "string", description: "期号" },
+                pages: { type: "string", description: "页码范围，如 1-15" },
+                originalTextSummary: { type: "string", description: "原文区域内容总结" },
+                description: { type: "string", description: "引文说明内容" },
+              },
+              required: ["authors", "title", "year", "venue"],
+            },
           },
-          title: {
-            type: "string",
-            description: "论文标题",
-          },
-          year: {
-            type: "number",
-            description: "发表年份",
-          },
-          venue: {
-            type: "string",
-            description: "期刊/会议名称",
-          },
-          doi: {
-            type: "string",
-            description: "DOI标识符（不含 https://doi.org/ 前缀）",
-          },
-          volume: {
-            type: "string",
-            description: "卷号",
-          },
-          issue: {
-            type: "string",
-            description: "期号",
-          },
-          pages: {
-            type: "string",
-            description: "页码范围，如 1-15",
-          },
+          authors: { type: "string", description: "作者列表（单篇模式），格式：Smith, J.; Doe, A." },
+          title: { type: "string", description: "论文标题（单篇模式）" },
+          year: { type: "number", description: "发表年份（单篇模式）" },
+          venue: { type: "string", description: "期刊/会议名称（单篇模式）" },
+          doi: { type: "string", description: "DOI标识符（不含 https://doi.org/ 前缀）" },
+          volume: { type: "string", description: "卷号" },
+          issue: { type: "string", description: "期号" },
+          pages: { type: "string", description: "页码范围，如 1-15" },
           style: {
             type: "string",
-            description: "引文格式：apa | mla | gb7714 | bibtex",
-            enum: ["apa", "mla", "gb7714", "bibtex"],
-            default: "apa",
+            description: "引文格式：apa | mla | gb7714 | bibtex | elsevier",
+            enum: ["apa", "mla", "gb7714", "bibtex", "elsevier"],
+            default: "elsevier",
           },
         },
-        required: ["authors", "title", "year", "venue"],
       },
     },
     // --- Paper Analysis Tool ---
@@ -331,6 +326,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       // Citation
       case "citation": {
+        const style = args?.style ? String(args.style) : "elsevier"
+
+        if (args?.papers && Array.isArray(args.papers) && style === "elsevier") {
+          const papers = (args.papers as any[]).map(p => ({
+            authors: String(p.authors ?? ""),
+            title: String(p.title ?? ""),
+            year: Number(p.year ?? 0),
+            venue: String(p.venue ?? ""),
+            doi: p.doi ? String(p.doi) : undefined,
+            volume: p.volume ? String(p.volume) : undefined,
+            issue: p.issue ? String(p.issue) : undefined,
+            pages: p.pages ? String(p.pages) : undefined,
+            originalTextSummary: p.originalTextSummary ? String(p.originalTextSummary) : undefined,
+            description: p.description ? String(p.description) : undefined,
+          }))
+          const result = formatCitationReport({ papers, style })
+          return { content: [{ type: "text", text: result }] }
+        }
+
         const result = await formatCitation({
           authors: String(args?.authors ?? ""),
           title: String(args?.title ?? ""),
@@ -340,7 +354,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           volume: args?.volume ? String(args.volume) : undefined,
           issue: args?.issue ? String(args.issue) : undefined,
           pages: args?.pages ? String(args.pages) : undefined,
-          style: args?.style ? String(args.style) : undefined,
+          style: style,
         })
         return { content: [{ type: "text", text: result }] }
       }
