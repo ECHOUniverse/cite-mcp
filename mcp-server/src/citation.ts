@@ -16,6 +16,7 @@ interface PaperEntry {
   year: number
   venue: string
   doi?: string
+  url?: string
   volume?: string
   issue?: string
   pages?: string
@@ -28,8 +29,12 @@ interface ReportArgs {
   style?: string
 }
 
+function doiUrl(doi?: string): string {
+  return doi ? ` https://doi.org/${doi}` : ""
+}
+
 function formatAPA(args: CitationArgs): string {
-  const doiPart = args.doi ? ` https://doi.org/${args.doi}` : ""
+  const doiPart = args.doi ? ` https://doi.org/${args.doi}` : " DOI: 无"
   const volIssue = args.volume
     ? args.issue
       ? `, ${args.volume}(${args.issue})`
@@ -40,7 +45,7 @@ function formatAPA(args: CitationArgs): string {
 }
 
 function formatMLA(args: CitationArgs): string {
-  const doiPart = args.doi ? ` https://doi.org/${args.doi}` : ""
+  const doiPart = args.doi ? ` https://doi.org/${args.doi}` : " DOI: 无"
   const volIssue = args.volume
     ? args.issue
       ? ` ${args.volume}.${args.issue}`
@@ -51,7 +56,7 @@ function formatMLA(args: CitationArgs): string {
 }
 
 function formatGB7714(args: CitationArgs): string {
-  const doiPart = args.doi ? ` DOI: ${args.doi}` : ""
+  const doiPart = args.doi ? ` DOI: ${args.doi}` : " DOI: 无"
   const volIssue = args.volume
     ? args.issue
       ? `, ${args.volume}(${args.issue})`
@@ -81,7 +86,7 @@ function formatBibTeX(args: CitationArgs): string {
 
 // --- Elsevier format functions ---
 
-function formatElsevierAuthors(authors: string): string {
+export function formatElsevierAuthors(authors: string): string {
   const parts = authors.split(";").map(s => s.trim()).filter(Boolean)
   if (parts.length === 0) return ""
   if (parts.length === 1) return parts[0]
@@ -89,13 +94,17 @@ function formatElsevierAuthors(authors: string): string {
   return parts.slice(0, -1).join(", ") + ", and " + parts[parts.length - 1]
 }
 
-function formatElsevierRef(entry: PaperEntry, index: number): string {
+export function formatElsevierRef(entry: PaperEntry, index: number): string {
   const authorStr = formatElsevierAuthors(entry.authors)
   const volPart = entry.volume ? `, vol. ${entry.volume}` : ""
   const issuePart = entry.issue ? `, no. ${entry.issue}` : ""
   const pagesPart = entry.pages ? `, pp. ${entry.pages}` : ""
-  const doiPart = entry.doi ? ` https://doi.org/${entry.doi}` : ""
-  return `[${index}] ${authorStr}, ${entry.title}, ${entry.venue}${volPart}${issuePart}${pagesPart}, ${entry.year}.${doiPart}`
+  const urlPart = entry.doi
+    ? ` https://doi.org/${entry.doi}`
+    : entry.url
+      ? ` ${entry.url}`
+      : ""
+  return `[${index}] ${authorStr}, ${entry.title}, ${entry.venue}${volPart}${issuePart}${pagesPart}, ${entry.year}.${urlPart}`
 }
 
 // --- Citation report (Elsevier default) ---
@@ -117,7 +126,7 @@ export function formatCitationReport(args: ReportArgs): string {
   const header = "| 引文序号 | 标题 | 网址 | 原文区域内容总结 | 引文说明内容 |"
   const sep = "|----------|------|------|------------------|--------------|"
   const rows = args.papers.map((p, i) => {
-    const doiUrl = p.doi ? `https://doi.org/${p.doi}` : ""
+    const doiUrl = p.doi ? `https://doi.org/${p.doi}` : (p.url || "无")
     return `| [${i + 1}] | ${p.title} | ${doiUrl} | ${p.originalTextSummary || ""} | ${p.description || ""} |`
   }).join("\n")
   const tableSection = `## 引文说明\n\n${header}\n${sep}\n${rows}`

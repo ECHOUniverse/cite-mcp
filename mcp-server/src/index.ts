@@ -3,126 +3,67 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
+  ListPromptsRequestSchema,
+  GetPromptRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js"
 
 import "./config.js"
-import { searchPapers, searchSemantic, searchOpenAlexApi, searchCrossrefApi } from "./paper-search.js"
-import { getPaperDetail, getPaperDetailByS2Id, getPaperDetailBatch } from "./paper-detail.js"
+import { searchPapers } from "./paper-search.js"
+import { getPaperDetailUnified } from "./paper-detail.js"
 import { getPaperRecommendations } from "./paper-recommendations.js"
 import { formatCitation, formatCitationReport } from "./citation.js"
 import { analyzePapers } from "./paper-analysis.js"
+import { citeText, formatCiteTextReport } from "./cite-text.js"
 
 const server = new Server(
   {
     name: "cite-mcp",
-    version: "1.2.0",
+    version: "2.0.0",
   },
   {
     capabilities: {
       tools: {},
+      prompts: {},
     },
   },
 )
 
+// --- Tool list ---
+
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
-    // --- Paper Search Tools ---
     {
       name: "paper_search",
-      description: "【首选搜索】多源聚合搜索：同时搜索 Semantic Scholar、OpenAlex 和 Crossref，去重后返回统一结果。适用于通用/跨学科搜索场景。用户说「搜一下 XX 方向的论文」时建议优先使用。三个单源工具（search_semantic_scholar、search_openalex、search_crossref）仅在需要特定数据源的专有能力时使用。",
+      description: "统一文献搜索。source 参数选择数据源：all（默认，多源聚合去重）、s2（Semantic Scholar，CS/AI领域首选）、openalex（全学科2.5亿+作品）、crossref（DOI元数据最权威）。用户说「搜 XX 论文」时使用此工具。",
       inputSchema: {
         type: "object",
         properties: {
           query: {
             type: "string",
-            description: "搜索关键词，建议使用英文。支持 Semantic Scholar 高级语法：AND/OR/短语/否定/前缀/模糊/邻近匹配",
+            description: "搜索关键词，建议英文。支持 Semantic Scholar 高级语法：AND/OR/NOT/短语/前缀匹配",
+          },
+          source: {
+            type: "string",
+            description: "数据源：all | s2 | openalex | crossref",
+            enum: ["all", "s2", "openalex", "crossref"],
+            default: "all",
           },
           context: {
             type: "string",
-            description: "背景上下文信息。描述研究主题、领域或具体方向（如'deep learning, transformer architecture, NLP'），这些额外关键词会被自动附加到搜索词后，帮助提升结果相关性。",
+            description: "背景上下文，额外关键词自动附加到搜索词后提升相关性",
           },
           limit: {
             type: "number",
-            description: "每个数据源返回的结果数，默认10",
+            description: "返回结果数，默认10。S2最大100，OA/CR最大50",
             default: 10,
           },
         },
         required: ["query"],
       },
     },
-    {
-      name: "search_semantic_scholar",
-      description: "通过 Semantic Scholar 搜索学术论文。计算机科学（CS/AI/NLP）、神经科学领域首选。支持高级查询语法：AND/OR/短语/否定/前缀/模糊/邻近匹配。当需要精确查询语法或专注于 CS/AI/NLP 领域时使用此工具。通用搜索场景推荐使用 paper_search（多源聚合）。",
-      inputSchema: {
-        type: "object",
-        properties: {
-          query: {
-            type: "string",
-            description: "搜索关键词。高级语法示例：\"attention mechanism\" AND transformer NOT GPT, climate OR warming, neuro*",
-          },
-          context: {
-            type: "string",
-            description: "背景上下文信息。描述研究主题、领域或具体方向（如'deep learning, transformer architecture, NLP'），这些额外关键词会被自动附加到搜索词后，帮助提升结果相关性。",
-          },
-          limit: {
-            type: "number",
-            description: "返回结果数量，默认10，最大100",
-            default: 10,
-          },
-        },
-        required: ["query"],
-      },
-    },
-    {
-      name: "search_openalex",
-      description: "通过 OpenAlex 搜索学术论文。全学科通用，覆盖 2.5 亿+ 学术作品。适用于跨学科广泛搜索，特别是在 Semantic Scholar 覆盖不足的学科领域。通用搜索场景推荐使用 paper_search（多源聚合）。",
-      inputSchema: {
-        type: "object",
-        properties: {
-          query: {
-            type: "string",
-            description: "搜索关键词，建议使用英文",
-          },
-          context: {
-            type: "string",
-            description: "背景上下文信息。描述研究主题、领域或具体方向（如'deep learning, transformer architecture, NLP'），这些额外关键词会被自动附加到搜索词后，帮助提升结果相关性。",
-          },
-          limit: {
-            type: "number",
-            description: "返回结果数量，默认10，最大50",
-            default: 10,
-          },
-        },
-        required: ["query"],
-      },
-    },
-    {
-      name: "search_crossref",
-      description: "通过 Crossref 搜索学术论文。DOI 元数据最权威的数据源，适合验证论文元数据准确性或查找 DOI 信息。通用搜索场景推荐使用 paper_search（多源聚合）。",
-      inputSchema: {
-        type: "object",
-        properties: {
-          query: {
-            type: "string",
-            description: "搜索关键词，建议使用英文",
-          },
-          context: {
-            type: "string",
-            description: "背景上下文信息。描述研究主题、领域或具体方向（如'deep learning, transformer architecture, NLP'），这些额外关键词会被自动附加到搜索词后，帮助提升结果相关性。",
-          },
-          limit: {
-            type: "number",
-            description: "返回结果数量，默认10，最大50",
-            default: 10,
-          },
-        },
-        required: ["query"],
-      },
-    },
-    // --- Paper Detail Tools ---
     {
       name: "paper_detail",
-      description: "通过 DOI 获取论文完整详情（多源合并：Crossref + Semantic Scholar + OpenAlex）。返回标题、作者、年份、摘要、引用数、参考文献等完整信息。用户说「这篇论文具体内容是什么」时使用此工具（如果有 DOI），或使用 get_by_s2id（如果只有 S2 Paper ID）。在搜索获取候选列表后，对感兴趣的论文使用此工具查看详情。",
+      description: "统一论文详情查询。支持三种模式：通过 DOI（如 10.1038/nature14539）、通过 Semantic Scholar Paper ID（如 CorpusId:12345）、批量 Paper ID 查询。用户说「这篇论文具体内容是什么」时使用。",
       inputSchema: {
         type: "object",
         properties: {
@@ -130,58 +71,36 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             type: "string",
             description: "论文 DOI（不含 https://doi.org/ 前缀）",
           },
-        },
-        required: ["doi"],
-      },
-    },
-    {
-      name: "get_by_s2id",
-      description: "通过 Semantic Scholar Paper ID 获取单篇论文详情。适用于从搜索结果或推荐结果中直接查看某篇论文的详细信息。如果只有 DOI 则使用 paper_detail。功能同 paper_detail 但通过 S2 ID 而非 DOI 访问。",
-      inputSchema: {
-        type: "object",
-        properties: {
           paperId: {
             type: "string",
             description: "Semantic Scholar Paper ID（如 CorpusId:12345 或 SHA哈希）",
           },
-        },
-        required: ["paperId"],
-      },
-    },
-    {
-      name: "get_by_s2ids_batch",
-      description: "通过 Semantic Scholar Paper ID 批量获取多篇论文详情。一次最多处理 500 个 Paper ID。适用于需要同时获取多篇论文详细信息的场景，如批量文献整理。如只需单篇，使用 get_by_s2id。",
-      inputSchema: {
-        type: "object",
-        properties: {
           paperIds: {
             type: "array",
             items: { type: "string" },
-            description: "Semantic Scholar Paper ID 列表",
+            description: "批量查询的 Semantic Scholar Paper ID 列表（最多500个）",
           },
         },
-        required: ["paperIds"],
       },
     },
-    // --- Paper Recommendation Tool ---
     {
       name: "paper_recommendations",
-      description: "基于已知论文的 Semantic Scholar Paper ID 获取相关推荐论文。用于拓展阅读、发现更多相关文献。在文献调研工作流中，通常放在 paper_search 和 paper_detail 之后使用，形成「搜索→查看→推荐拓展」的闭环。",
+      description: "基于已知论文获取推荐文献。用户说「帮我找和这篇类似的论文」时使用。配合 paper_search 和 paper_detail 形成「搜索→查看→拓展」闭环。",
       inputSchema: {
         type: "object",
         properties: {
           paperId: {
             type: "string",
-            description: "源论文的 Semantic Scholar Paper ID（如 CorpusId:12345 或 SHA哈希）",
+            description: "源论文的 Semantic Scholar Paper ID",
           },
           limit: {
             type: "number",
-            description: "返回推荐数量，默认10，最大500",
+            description: "推荐数量，默认10，最大500",
             default: 10,
           },
           from: {
             type: "string",
-            description: "推荐来源池选项：recent（默认值，仅返回近期发表的相关论文，时效性好）；all-cs（从全部计算机科学论文中推荐，覆盖面更广但可能包含旧论文）",
+            description: "推荐池：recent（近期论文，时效性好）| all-cs（全CS领域，覆盖面广）",
             enum: ["recent", "all-cs"],
             default: "recent",
           },
@@ -189,41 +108,42 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ["paperId"],
       },
     },
-    // --- Citation Tool ---
     {
       name: "citation",
-      description: "格式化学术引文生成与报告。支持 APA 7th、MLA 9th、GB/T 7714-2015（中国标准）、BibTeX 及 Elsevier 编号格式。默认 Elsevier 格式接受多篇论文输入，输出三段式 Markdown 报告（正文引用编号 + 参考文献表含 URL + 引文说明表）。用户说「帮我生成参考文献」时使用此工具。",
+      description: "引文格式化。单篇模式支持 apa/mla/gb7714/bibtex/elsevier 五种格式。多篇报告模式（papers 数组 + elsevier 风格）输出三段式 Markdown 报告：正文引用编号 + 参考文献表 + 引文说明表。默认 Elsevier 格式，强制含 DOI 和 URL。",
       inputSchema: {
         type: "object",
         properties: {
           papers: {
             type: "array",
-            description: "论文列表（Elsevier 报告模式使用）。每项包含 authors, title, year, venue（必填）及 doi, volume, issue, pages, originalTextSummary, description（选填）。提供此参数时将输出三段式报告。",
+            description: "论文列表（报告模式）。每项：authors, title, year, venue（必填）及 doi, url, volume, issue, pages, originalTextSummary, description（选填）",
             items: {
               type: "object",
               properties: {
-                authors: { type: "string", description: "作者列表，格式：Smith, J.; Doe, A." },
-                title: { type: "string", description: "论文标题" },
-                year: { type: "number", description: "发表年份" },
-                venue: { type: "string", description: "期刊/会议名称" },
-                doi: { type: "string", description: "DOI标识符（不含 https://doi.org/ 前缀）" },
-                volume: { type: "string", description: "卷号" },
-                issue: { type: "string", description: "期号" },
-                pages: { type: "string", description: "页码范围，如 1-15" },
+                authors: { type: "string", description: "作者，格式: Smith, J.; Doe, A." },
+                title: { type: "string", description: "标题" },
+                year: { type: "number", description: "年份" },
+                venue: { type: "string", description: "期刊/会议" },
+                doi: { type: "string", description: "DOI（不含前缀）" },
+                url: { type: "string", description: "论文URL" },
+                volume: { type: "string" },
+                issue: { type: "string" },
+                pages: { type: "string" },
                 originalTextSummary: { type: "string", description: "原文区域内容总结" },
-                description: { type: "string", description: "引文说明内容" },
+                description: { type: "string", description: "引文说明" },
               },
               required: ["authors", "title", "year", "venue"],
             },
           },
-          authors: { type: "string", description: "作者列表（单篇模式），格式：Smith, J.; Doe, A." },
-          title: { type: "string", description: "论文标题（单篇模式）" },
-          year: { type: "number", description: "发表年份（单篇模式）" },
-          venue: { type: "string", description: "期刊/会议名称（单篇模式）" },
-          doi: { type: "string", description: "DOI标识符（不含 https://doi.org/ 前缀）" },
-          volume: { type: "string", description: "卷号" },
-          issue: { type: "string", description: "期号" },
-          pages: { type: "string", description: "页码范围，如 1-15" },
+          authors: { type: "string", description: "作者（单篇模式）" },
+          title: { type: "string", description: "标题（单篇模式）" },
+          year: { type: "number", description: "年份（单篇模式）" },
+          venue: { type: "string", description: "期刊/会议（单篇模式）" },
+          doi: { type: "string", description: "DOI（不含前缀）" },
+          url: { type: "string", description: "论文URL（单篇模式）" },
+          volume: { type: "string" },
+          issue: { type: "string" },
+          pages: { type: "string" },
           style: {
             type: "string",
             description: "引文格式：apa | mla | gb7714 | bibtex | elsevier",
@@ -233,88 +153,264 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         },
       },
     },
-    // --- Paper Analysis Tool ---
     {
       name: "paper_analysis",
-      description: "【文献综述首选】文献综合分析：搜索指定数量的高匹配文献，自动生成横向对比概览表 + 每篇文献的详细总结和数据性能表。用户说「帮我了解下 XX 领域的研究现状」时使用此工具。与 paper_search 的区别：paper_search 返回论文列表，paper_analysis 返回带对比分析和总结的综合报告，适合快速了解一个研究方向的全貌。",
+      description: "文献综述分析：搜索指定数量的高匹配文献，自动生成横向对比概览表 + 每篇详细总结。用户说「帮我了解下 XX 领域的研究现状」时使用。与 paper_search 区别：paper_search 返回列表，paper_analysis 返回带对比分析的综述报告。",
       inputSchema: {
         type: "object",
         properties: {
           query: {
             type: "string",
-            description: "搜索关键词，建议使用英文",
+            description: "搜索关键词，建议英文",
           },
           count: {
             type: "number",
-            description: "需要分析的文献数量，默认5",
+            description: "分析文献数，默认5",
             default: 5,
           },
           context: {
             type: "string",
-            description: "背景上下文信息。描述研究主题、领域或具体方向（如'deep learning, transformer architecture, NLP'），这些额外关键词会被自动附加到搜索词后，帮助提升结果相关性。",
+            description: "背景上下文，额外关键词自动附加到搜索词后",
           },
         },
         required: ["query"],
       },
     },
+    {
+      name: "cite_text",
+      description: "文本引文分析：输入文本段落 + 从文本中提取的论点列表，自动搜索支持文献，输出三段式报告（正文引用标记 + 参考文献表 + 引文说明表）。用户说「帮我给这段话插入参考文献」时使用。工作流：先提取文本中的论点 → 调用此工具搜索文献 → 获得三段式报告。",
+      inputSchema: {
+        type: "object",
+        properties: {
+          text: {
+            type: "string",
+            description: "需要插入引文的原始文本段落",
+          },
+          claims: {
+            type: "array",
+            description: "从文本中提取的论点列表。每项含 sentence（文本中的原句）和可选的 context（补充搜索上下文）",
+            items: {
+              type: "object",
+              properties: {
+                sentence: { type: "string", description: "文本中需要引文支持的论点句子（原文原句，用于定位插入位置）" },
+                context: { type: "string", description: "补充搜索上下文，帮助提升搜索精度" },
+              },
+              required: ["sentence"],
+            },
+          },
+          limit: {
+            type: "number",
+            description: "每个论点返回的最大论文数，默认2",
+            default: 2,
+          },
+        },
+        required: ["text", "claims"],
+      },
+    },
   ],
 }))
+
+// --- Prompt list ---
+
+server.setRequestHandler(ListPromptsRequestSchema, async () => ({
+  prompts: [
+    {
+      name: "literature_survey",
+      description: "文献调研工作流：搜索→查看详情→推荐拓展。用于全面了解一个研究方向的文献脉络。",
+      arguments: [
+        { name: "query", description: "研究方向关键词（英文）", required: true },
+        { name: "context", description: "补充背景描述（可选）", required: false },
+      ],
+    },
+    {
+      name: "paper_verify",
+      description: "论据验证工作流：提取文本论点→双向搜索（正向+反向）→分级（A/B/C）→争议检测→输出验证报告。用于验证论文段落中的学术主张是否有文献支持。",
+      arguments: [
+        { name: "text", description: "需要验证的文本段落", required: true },
+        { name: "claim_count", description: "提取论点数量，默认3", required: false },
+      ],
+    },
+    {
+      name: "cite_text",
+      description: "文本引文插入工作流：分析文本→提取可引用的论点→搜索支持文献→输出三段式报告（正文引用+参考文献+引文说明）。用于给一段文本自动查找并插入参考文献。",
+      arguments: [
+        { name: "text", description: "需要插入引文的文本段落", required: true },
+        { name: "context", description: "领域背景补充（可选）", required: false },
+      ],
+    },
+  ],
+}))
+
+// --- Prompt content ---
+
+server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+  const { name, arguments: args } = request.params
+
+  switch (name) {
+    case "literature_survey": {
+      const query = args?.query || "YOUR_QUERY"
+      const context = args?.context || ""
+      return {
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: `## 文献调研：${query}
+
+请按照以下工作流进行系统性的文献调研：
+
+### 第一步：搜索文献
+使用 **paper_search** 工具搜索「${query}」${context ? `，背景上下文：「${context}」` : ""}。
+- 建议先用 source="s2" 获取 CS/AI 领域的高质量结果
+- 如结果不足，用 source="all" 进行多源聚合搜索
+
+### 第二步：查看详情
+对于搜索结果中感兴趣的论文（3-5篇），使用 **paper_detail** 工具查看完整详情：
+- 关注：研究问题、方法论、关键发现、局限性
+- 记录每篇论文的 DOI 和引用数
+
+### 第三步：拓展发现
+对于核心论文，使用 **paper_recommendations** 工具获取相关推荐：
+- from="recent" 获取近期相关研究
+- from="all-cs" 获取更广泛的相关文献
+
+### 第四步：总结
+整理调研结果，包括：
+- 研究方向概述
+- 关键论文列表（含 DOI、URL、引用数）
+- 研究空白与未来方向`,
+            },
+          },
+        ],
+      }
+    }
+
+    case "paper_verify": {
+      const text = args?.text || "YOUR_TEXT"
+      const claimCount = parseInt(args?.claim_count || "3", 10)
+      return {
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: `## 论据验证
+
+请验证以下文本中的学术主张是否在文献中有据可查。
+
+> **原文段落**
+> ${text}
+
+### 工作流
+
+#### 第一步：提取论点
+从原文中提取 ${claimCount} 个可验证的学术主张。每个论点：
+- 必须是可证伪的（有明确研究对象）
+- 排除背景描述、常识性陈述、未来展望
+- 用一句话概括核心断言，翻译为英文关键词
+
+#### 第二步：双向搜索
+对每个论点执行：
+- **正向搜索**：用 **paper_search** (source="s2") 搜索支持文献
+- **反向搜索**：用 **paper_search** 搜索否定/挑战性文献（加关键词：limitations, challenge, refute, contradict）
+
+#### 第三步：分级
+| 级别 | 标准 |
+|------|------|
+| A | 摘要明确验证论点，且为论文核心贡献 |
+| B | 论文涉及该方向，但非主要结论 |
+| C | 主题相关，但无直接证据 |
+
+#### 第四步：输出验证报告
+使用 **citation** 工具（报告模式）输出三段式报告：
+- 正文引用编号
+- 参考文献表（Elsevier 格式，强制含 DOI + URL）
+- 引文说明表
+
+如有反向搜索发现的反驳文献，标记「存在学术争议」。`,
+            },
+          },
+        ],
+      }
+    }
+
+    case "cite_text": {
+      const text = args?.text || "YOUR_TEXT"
+      const context = args?.context || ""
+      return {
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: `## 文本引文分析
+
+请为以下文本自动查找并插入支持文献。
+
+> **原文**
+> ${text}
+${context ? `\n**领域背景**: ${context}` : ""}
+
+### 工作流
+
+#### 第一步：提取论点
+分析文本，识别其中需要文献支持的**事实性断言**。每个断言提取为：
+- \`sentence\`: 文本中的原句（用于定位插入位置）
+- \`context\`: 补充搜索关键词（英文）
+
+#### 第二步：搜索文献
+使用 **cite_text** 工具，传入文本和提取的论点列表：
+- text: 原始文本
+- claims: 论点数组
+- limit: 每个论点返回 2 篇最佳匹配论文
+
+#### 第三步：输出报告
+cite_text 工具会自动返回三段式报告：
+1. **正文引用**——原文中在论点句末插入 [N] 标记
+2. **参考文献**——Elsevier 格式，强制含 URL
+3. **引文说明**——表格，含标题、网址、原文总结、说明`,
+            },
+          },
+        ],
+      }
+    }
+
+    default:
+      throw new Error(`未知 Prompt: ${name}`)
+  }
+})
+
+// --- Tool handlers ---
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params
 
   try {
     switch (name) {
-      // Paper Search
+      // 1. paper_search — unified search
       case "paper_search": {
         const result = await searchPapers(
           String(args?.query ?? ""),
           String(args?.context ?? ""),
           Number(args?.limit ?? 10),
-        )
-        return { content: [{ type: "text", text: result }] }
-      }
-      case "search_semantic_scholar": {
-        const result = await searchSemantic(
-          String(args?.query ?? ""),
-          String(args?.context ?? ""),
-          Number(args?.limit ?? 10),
-        )
-        return { content: [{ type: "text", text: result }] }
-      }
-      case "search_openalex": {
-        const result = await searchOpenAlexApi(
-          String(args?.query ?? ""),
-          String(args?.context ?? ""),
-          Number(args?.limit ?? 10),
-        )
-        return { content: [{ type: "text", text: result }] }
-      }
-      case "search_crossref": {
-        const result = await searchCrossrefApi(
-          String(args?.query ?? ""),
-          String(args?.context ?? ""),
-          Number(args?.limit ?? 10),
+          String(args?.source ?? "all"),
         )
         return { content: [{ type: "text", text: result }] }
       }
 
-      // Paper Detail
+      // 2. paper_detail — unified detail
       case "paper_detail": {
-        const result = await getPaperDetail(String(args?.doi ?? ""))
-        return { content: [{ type: "text", text: result }] }
-      }
-      case "get_by_s2id": {
-        const result = await getPaperDetailByS2Id(String(args?.paperId ?? ""))
-        return { content: [{ type: "text", text: result }] }
-      }
-      case "get_by_s2ids_batch": {
-        const ids = Array.isArray(args?.paperIds) ? args.paperIds.map(String) : []
-        const result = await getPaperDetailBatch(ids)
+        const paperIds = Array.isArray(args?.paperIds) ? args.paperIds.map(String) : undefined
+        const result = await getPaperDetailUnified({
+          doi: args?.doi ? String(args.doi) : undefined,
+          paperId: args?.paperId ? String(args.paperId) : undefined,
+          paperIds,
+        })
         return { content: [{ type: "text", text: result }] }
       }
 
-      // Paper Recommendations
+      // 3. paper_recommendations
       case "paper_recommendations": {
         const result = await getPaperRecommendations(
           String(args?.paperId ?? ""),
@@ -324,7 +420,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: result }] }
       }
 
-      // Citation
+      // 4. citation
       case "citation": {
         const style = args?.style ? String(args.style) : "elsevier"
 
@@ -335,6 +431,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             year: Number(p.year ?? 0),
             venue: String(p.venue ?? ""),
             doi: p.doi ? String(p.doi) : undefined,
+            url: p.url ? String(p.url) : undefined,
             volume: p.volume ? String(p.volume) : undefined,
             issue: p.issue ? String(p.issue) : undefined,
             pages: p.pages ? String(p.pages) : undefined,
@@ -354,12 +451,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           volume: args?.volume ? String(args.volume) : undefined,
           issue: args?.issue ? String(args.issue) : undefined,
           pages: args?.pages ? String(args.pages) : undefined,
-          style: style,
+          style,
         })
         return { content: [{ type: "text", text: result }] }
       }
 
-      // Paper Analysis
+      // 5. paper_analysis
       case "paper_analysis": {
         const result = await analyzePapers(
           String(args?.query ?? ""),
@@ -367,6 +464,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           String(args?.context ?? ""),
         )
         return { content: [{ type: "text", text: result }] }
+      }
+
+      // 6. cite_text
+      case "cite_text": {
+        const text = String(args?.text ?? "")
+        const claims = Array.isArray(args?.claims)
+          ? (args.claims as any[]).map(c => ({
+              sentence: String(c.sentence ?? ""),
+              context: c.context ? String(c.context) : undefined,
+            }))
+          : []
+        if (!text) throw new Error("text 参数为必填")
+        if (claims.length === 0) throw new Error("claims 参数为必填，且至少包含一个论点")
+        const limit = Number(args?.limit ?? 2)
+        const result = await citeText(text, claims, limit)
+        const report = formatCiteTextReport(result)
+        return { content: [{ type: "text", text: report }] }
       }
 
       default:

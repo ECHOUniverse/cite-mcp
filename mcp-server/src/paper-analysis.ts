@@ -20,8 +20,8 @@ function formatOverviewTable(query: string, papers: PaperResult[]): string {
     "",
     "### 文献概览",
     "",
-    "| # | 标题 | 年份 | 期刊/会议 | 引用数 | 数据源 |",
-    "|---|------|------|-----------|--------|--------|",
+    "| # | 标题 | 年份 | 期刊/会议 | 引用数 | DOI | URL | 数据源 |",
+    "|---|------|------|-----------|--------|-----|-----|--------|",
   ]
 
   for (let i = 0; i < papers.length; i++) {
@@ -30,7 +30,9 @@ function formatOverviewTable(query: string, papers: PaperResult[]): string {
     const citations = p.citationCount != null ? String(p.citationCount) : "未知"
     const year = p.year ?? "未知"
     const venue = p.venue || "-"
-    lines.push(`| ${i + 1} | ${title} | ${year} | ${venue} | ${citations} | ${p.source} |`)
+    const doi = p.doi || "无"
+    const url = p.url || "无"
+    lines.push(`| ${i + 1} | ${title} | ${year} | ${venue} | ${citations} | ${doi} | ${url} | ${p.source} |`)
   }
 
   return lines.join("\n")
@@ -53,6 +55,7 @@ function formatPaperAnalysis(index: number, paper: PaperResult, detail?: PaperDe
     `| 年份 | ${paper.year ?? "未知"} |`,
     `| 期刊/会议 | ${paper.venue || "未知"} |`,
     `| DOI | ${paper.doi || "无"} |`,
+    `| URL | ${paper.url || "无"} |`,
     `| 引用数 | ${paper.citationCount != null ? String(paper.citationCount) : "未知"} |`,
     `| 数据源 | ${paper.source} |`,
   ]

@@ -22,7 +22,7 @@ function formatRecommendations(papers: RecommendedPaper[], sourcePaperId: string
         `   年份: ${p.year ?? "未知"}`,
         `   期刊: ${p.venue || "未知"}`,
         `   DOI: ${p.doi || "无"}`,
-        `   URL: ${p.url}`,
+        `   URL: ${p.url || "无"}`,
         `   引用数: ${p.citationCount ?? "未知"}`,
       ]
       if (p.abstract) {

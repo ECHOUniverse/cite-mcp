@@ -20,7 +20,7 @@ function formatDetail(p: PaperDetail): string {
     `年份: ${p.year ?? "未知"}`,
     `期刊: ${p.venue || "未知"}`,
     `DOI: ${p.doi || "无"}`,
-    `URL: ${p.url}`,
+    `URL: ${p.url || "无"}`,
     `DOI链接: ${p.doi ? `${config.doi.baseUrl}/${p.doi}` : "无"}`,
     `引用数: ${p.citationCount ?? "未知"}`,
     `来源: ${p.source}`,
@@ -318,4 +318,22 @@ export async function getPaperDetailBatch(paperIds: string[]): Promise<string> {
     return "未找到任何对应的论文详情。"
   }
   return results.map(formatDetail).join("\n\n---\n\n")
+}
+
+// Unified detail entry: dispatches by doi / paperId / paperIds
+export async function getPaperDetailUnified(args: {
+  doi?: string
+  paperId?: string
+  paperIds?: string[]
+}): Promise<string> {
+  if (args.doi) {
+    return getPaperDetail(args.doi)
+  }
+  if (args.paperId) {
+    return getPaperDetailByS2Id(args.paperId)
+  }
+  if (args.paperIds && args.paperIds.length > 0) {
+    return getPaperDetailBatch(args.paperIds)
+  }
+  return "请提供 doi、paperId 或 paperIds 参数之一。"
 }

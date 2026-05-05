@@ -163,7 +163,7 @@ function formatResults(papers: PaperResult[]): string {
         `   年份: ${p.year ?? "未知"}`,
         `   期刊: ${p.venue || "未知"}`,
         `   DOI: ${p.doi || "无"}`,
-        `   URL: ${p.url}`,
+        `   URL: ${p.url || "无"}`,
         `   引用数: ${p.citationCount ?? "未知"}`,
         `   来源: ${p.source}`,
       ]
@@ -176,12 +176,50 @@ function formatResults(papers: PaperResult[]): string {
     .join("\n\n")
 }
 
-// Multi-source search: S2 first, fallback to OA+CR if not enough results
-export async function searchPapers(query: string, context: string, limit: number): Promise<string> {
+// Unified search with source parameter
+export async function searchPapers(
+  query: string,
+  context: string,
+  limit: number,
+  source: string = "all",
+): Promise<string> {
   const combinedQuery = context ? `${query} ${context}` : query
   const perSource = limit || 10
   const errors: string[] = []
 
+  source = source.toLowerCase()
+  if (source === "s2" || source === "semantic_scholar") {
+    const results = await searchSemanticScholar(combinedQuery, perSource).catch((err) => {
+      errors.push(`Semantic Scholar: ${err}`)
+      return []
+    })
+    const deduped = deduplicate(results)
+    let output = formatResults(deduped)
+    if (errors.length > 0) output += `\n\n---\n部分数据源出错:\n${errors.join("\n")}`
+    return output
+  }
+
+  if (source === "openalex" || source === "oa") {
+    const results = await searchOpenAlex(combinedQuery, perSource).catch((err) => {
+      errors.push(`OpenAlex: ${err}`)
+      return []
+    })
+    let output = formatResults(results)
+    if (errors.length > 0) output += `\n\n---\n部分数据源出错:\n${errors.join("\n")}`
+    return output
+  }
+
+  if (source === "crossref" || source === "cr") {
+    const results = await searchCrossref(combinedQuery, perSource).catch((err) => {
+      errors.push(`Crossref: ${err}`)
+      return []
+    })
+    let output = formatResults(results)
+    if (errors.length > 0) output += `\n\n---\n部分数据源出错:\n${errors.join("\n")}`
+    return output
+  }
+
+  // Default: "all" — S2 first, fallback to OA+CR
   const s2 = await searchSemanticScholar(combinedQuery, perSource).catch((err) => {
     errors.push(`Semantic Scholar: ${err}`)
     return []
