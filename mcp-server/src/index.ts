@@ -110,7 +110,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "citation",
-      description: "引文格式化。单篇模式支持 apa/mla/gb7714/bibtex/elsevier 五种格式。多篇报告模式（papers 数组 + elsevier 风格）输出三段式 Markdown 报告：正文引用编号 + 参考文献表 + 引文说明表。默认 Elsevier 格式，强制含 DOI 和 URL。",
+      description: "引文格式化。单篇模式支持 apa/mla/gb7714/bibtex/elsevier 五种格式。多篇报告模式（papers 数组 + elsevier 风格）输出三段式 Markdown 报告：正文引用编号 + 参考文献表 + 引文说明表。默认 Elsevier 格式，强制含 DOI 和 URL。**输出约束**：本工具返回严格的三段式 Markdown 报告，调用后必须原样展示全部三段（正文引用、参考文献、引文说明），禁止合并、删除、或重新编排。",
       inputSchema: {
         type: "object",
         properties: {
@@ -178,7 +178,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "cite_text",
-      description: "文本引文分析：输入文本段落 + 从文本中提取的论点列表，自动搜索支持文献，输出三段式报告（正文引用标记 + 参考文献表 + 引文说明表）。用户说「帮我给这段话插入参考文献」时使用。工作流：先提取文本中的论点 → 调用此工具搜索文献 → 获得三段式报告。",
+      description: "文本引文分析：输入文本段落 + 从文本中提取的论点列表，自动搜索支持文献，输出三段式报告（正文引用标记 + 参考文献表 + 引文说明表）。用户说「帮我给这段话插入参考文献」时使用。工作流：先提取文本中的论点 → 调用此工具搜索文献 → 获得三段式报告。**输出约束**：本工具返回严格的三段式 Markdown 报告，调用后必须原样展示全部三段（正文引用、参考文献、引文说明），禁止合并、删除、或重新编排。",
       inputSchema: {
         type: "object",
         properties: {
@@ -328,7 +328,9 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
 - 参考文献表（Elsevier 格式，强制含 DOI + URL）
 - 引文说明表
 
-如有反向搜索发现的反驳文献，标记「存在学术争议」。`,
+如有反向搜索发现的反驳文献，标记「存在学术争议」。
+
+**注意**：citation 工具返回的三段式报告必须**原样展示**全部三段（正文引用、参考文献、引文说明），不得合并或删减。`,
             },
           },
         ],
@@ -369,7 +371,10 @@ ${context ? `\n**领域背景**: ${context}` : ""}
 cite_text 工具会自动返回三段式报告：
 1. **正文引用**——原文中在论点句末插入 [N] 标记
 2. **参考文献**——Elsevier 格式，强制含 URL
-3. **引文说明**——表格，含标题、网址、原文总结、说明`,
+3. **引文说明**——表格，含标题、网址、原文总结、说明
+
+#### 第四步：原样输出
+将 cite_text 返回的三段式报告**原样输出**给用户，不得修改格式、不得合并段落、不得省略任何一节。`,
             },
           },
         ],
