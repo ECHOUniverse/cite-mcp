@@ -4,6 +4,7 @@ interface CitationArgs {
   year: number
   venue: string
   doi?: string
+  url?: string
   volume?: string
   issue?: string
   pages?: string
@@ -34,7 +35,9 @@ function doiUrl(doi?: string): string {
 }
 
 function formatAPA(args: CitationArgs): string {
-  const doiPart = args.doi ? ` https://doi.org/${args.doi}` : " DOI: 无"
+  const doiPart = args.doi
+    ? ` https://doi.org/${args.doi}`
+    : (args.url ? ` ${args.url}` : " DOI: 无")
   const volIssue = args.volume
     ? args.issue
       ? `, ${args.volume}(${args.issue})`
@@ -45,7 +48,9 @@ function formatAPA(args: CitationArgs): string {
 }
 
 function formatMLA(args: CitationArgs): string {
-  const doiPart = args.doi ? ` https://doi.org/${args.doi}` : " DOI: 无"
+  const doiPart = args.doi
+    ? ` https://doi.org/${args.doi}`
+    : (args.url ? ` ${args.url}` : " DOI: 无")
   const volIssue = args.volume
     ? args.issue
       ? ` ${args.volume}.${args.issue}`
@@ -56,7 +61,9 @@ function formatMLA(args: CitationArgs): string {
 }
 
 function formatGB7714(args: CitationArgs): string {
-  const doiPart = args.doi ? ` DOI: ${args.doi}` : " DOI: 无"
+  const doiPart = args.doi
+    ? ` DOI: ${args.doi}`
+    : (args.url ? ` URL: ${args.url}` : " DOI: 无")
   const volIssue = args.volume
     ? args.issue
       ? `, ${args.volume}(${args.issue})`
@@ -80,6 +87,7 @@ function formatBibTeX(args: CitationArgs): string {
   if (args.issue) lines.push(`  number = {${args.issue}},`)
   if (args.pages) lines.push(`  pages = {${args.pages}},`)
   if (args.doi) lines.push(`  doi = {${args.doi}},`)
+  if (args.url) lines.push(`  url = {${args.url}},`)
   lines.push("}")
   return lines.join("\n")
 }

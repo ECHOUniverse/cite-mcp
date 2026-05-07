@@ -34,7 +34,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
       name: "paper_search",
-      description: "统一文献搜索。source 参数选择数据源：all（默认，多源聚合去重）、s2（Semantic Scholar，CS/AI领域首选）、openalex（全学科2.5亿+作品）、crossref（DOI元数据最权威）。用户说「搜 XX 论文」时使用此工具。",
+      description: "统一文献搜索。source 参数选择数据源：all（默认，多源聚合去重）、s2（Semantic Scholar，CS/AI领域首选）、openalex（全学科2.5亿+作品）、crossref（DOI元数据最权威）。用户说「搜 XX 论文」时使用此工具。输出结果强制包含每篇论文的 DOI 和 URL。",
       inputSchema: {
         type: "object",
         properties: {
@@ -63,7 +63,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "paper_detail",
-      description: "统一论文详情查询。支持三种模式：通过 DOI（如 10.1038/nature14539）、通过 Semantic Scholar Paper ID（如 CorpusId:12345）、批量 Paper ID 查询。用户说「这篇论文具体内容是什么」时使用。",
+      description: "统一论文详情查询。支持三种模式：通过 DOI（如 10.1038/nature14539）、通过 Semantic Scholar Paper ID（如 CorpusId:12345）、批量 Paper ID 查询。用户说「这篇论文具体内容是什么」时使用。输出结果强制包含论文 DOI、URL 和 DOI 链接。",
       inputSchema: {
         type: "object",
         properties: {
@@ -85,7 +85,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "paper_recommendations",
-      description: "基于已知论文获取推荐文献。用户说「帮我找和这篇类似的论文」时使用。配合 paper_search 和 paper_detail 形成「搜索→查看→拓展」闭环。",
+      description: "基于已知论文获取推荐文献。用户说「帮我找和这篇类似的论文」时使用。配合 paper_search 和 paper_detail 形成「搜索→查看→拓展」闭环。输出结果强制包含每篇推荐论文的 DOI 和 URL。",
       inputSchema: {
         type: "object",
         properties: {
@@ -124,8 +124,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
                 title: { type: "string", description: "标题" },
                 year: { type: "number", description: "年份" },
                 venue: { type: "string", description: "期刊/会议" },
-                doi: { type: "string", description: "DOI（不含前缀）" },
-                url: { type: "string", description: "论文URL" },
+                doi: { type: "string", description: "DOI（不含 https://doi.org/ 前缀），输出时强制生成完整 DOI 链接" },
+                url: { type: "string", description: "论文直接 URL，DOI 优先，无 DOI 时使用此 URL" },
                 volume: { type: "string" },
                 issue: { type: "string" },
                 pages: { type: "string" },
@@ -139,8 +139,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           title: { type: "string", description: "标题（单篇模式）" },
           year: { type: "number", description: "年份（单篇模式）" },
           venue: { type: "string", description: "期刊/会议（单篇模式）" },
-          doi: { type: "string", description: "DOI（不含前缀）" },
-          url: { type: "string", description: "论文URL（单篇模式）" },
+          doi: { type: "string", description: "DOI（不含 https://doi.org/ 前缀），输出时强制生成完整 DOI 链接" },
+          url: { type: "string", description: "论文直接 URL，DOI 优先，无 DOI 时使用此 URL" },
           volume: { type: "string" },
           issue: { type: "string" },
           pages: { type: "string" },
@@ -155,7 +155,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "paper_analysis",
-      description: "文献综述分析：搜索指定数量的高匹配文献，自动生成横向对比概览表 + 每篇详细总结。用户说「帮我了解下 XX 领域的研究现状」时使用。与 paper_search 区别：paper_search 返回列表，paper_analysis 返回带对比分析的综述报告。",
+      description: "文献综述分析：搜索指定数量的高匹配文献，自动生成横向对比概览表 + 每篇详细总结。用户说「帮我了解下 XX 领域的研究现状」时使用。与 paper_search 区别：paper_search 返回列表，paper_analysis 返回带对比分析的综述报告。输出结果的概览表和详情表强制包含 DOI 和 URL 列。",
       inputSchema: {
         type: "object",
         properties: {
@@ -178,7 +178,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "cite_text",
-      description: "文本引文分析：输入文本段落 + 从文本中提取的论点列表，自动搜索支持文献，输出三段式报告（正文引用标记 + 参考文献表 + 引文说明表）。用户说「帮我给这段话插入参考文献」时使用。工作流：先提取文本中的论点 → 调用此工具搜索文献 → 获得三段式报告。**输出约束**：本工具返回严格的三段式 Markdown 报告，调用后必须原样展示全部三段（正文引用、参考文献、引文说明），禁止合并、删除、或重新编排。",
+      description: "文本引文分析：输入文本段落 + 从文本中提取的论点列表，自动搜索支持文献，输出三段式报告（正文引用标记 + 参考文献表 + 引文说明表）。用户说「帮我给这段话插入参考文献」时使用。工作流：先提取文本中的论点 → 调用此工具搜索文献 → 获得三段式报告。参考文献表强制含 DOI 和 URL 链接，引文说明表强制含网址列。**输出约束**：本工具返回严格的三段式 Markdown 报告，调用后必须原样展示全部三段（正文引用、参考文献、引文说明），禁止合并、删除、或重新编排。",
       inputSchema: {
         type: "object",
         properties: {
@@ -268,7 +268,7 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
 ### 第二步：查看详情
 对于搜索结果中感兴趣的论文（3-5篇），使用 **paper_detail** 工具查看完整详情：
 - 关注：研究问题、方法论、关键发现、局限性
-- 记录每篇论文的 DOI 和引用数
+- 记录每篇论文的 DOI、URL 链接和引用数
 
 ### 第三步：拓展发现
 对于核心论文，使用 **paper_recommendations** 工具获取相关推荐：
@@ -278,7 +278,7 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
 ### 第四步：总结
 整理调研结果，包括：
 - 研究方向概述
-- 关键论文列表（含 DOI、URL、引用数）
+- 关键论文列表（每篇强制含 DOI 和 URL 链接、引用数）
 - 研究空白与未来方向`,
             },
           },
@@ -370,7 +370,7 @@ ${context ? `\n**领域背景**: ${context}` : ""}
 #### 第三步：输出报告
 cite_text 工具会自动返回三段式报告：
 1. **正文引用**——原文中在论点句末插入 [N] 标记
-2. **参考文献**——Elsevier 格式，强制含 URL
+2. **参考文献**——Elsevier 格式，强制含 DOI 链接和 URL
 3. **引文说明**——表格，含标题、网址、原文总结、说明
 
 #### 第四步：原样输出
@@ -453,6 +453,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           year: Number(args?.year ?? 0),
           venue: String(args?.venue ?? ""),
           doi: args?.doi ? String(args.doi) : undefined,
+          url: args?.url ? String(args.url) : undefined,
           volume: args?.volume ? String(args.volume) : undefined,
           issue: args?.issue ? String(args.issue) : undefined,
           pages: args?.pages ? String(args.pages) : undefined,
