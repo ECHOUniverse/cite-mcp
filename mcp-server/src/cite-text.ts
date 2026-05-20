@@ -1,5 +1,6 @@
 import { PaperResult, searchSemanticScholar, searchOpenAlex, searchCrossref, deduplicate } from "./paper-search.js"
 import { formatElsevierRef } from "./citation.js"
+import { stagger } from "./retry.js"
 
 export interface ClaimInput {
   sentence: string
@@ -47,11 +48,13 @@ function buildQueries(sentence: string, context: string): string[] {
 
 // Search all three sources in parallel, deduplicate
 async function searchAllSources(query: string, limit: number): Promise<PaperResult[]> {
-  const [s2, oa, cr] = await Promise.allSettled([
-    searchSemanticScholar(query, limit),
-    searchOpenAlex(query, limit),
-    searchCrossref(query, limit),
-  ])
+  const [s2, oa, cr] = await Promise.allSettled(
+    stagger([
+      () => searchSemanticScholar(query, limit),
+      () => searchOpenAlex(query, limit),
+      () => searchCrossref(query, limit),
+    ]),
+  )
 
   const results: PaperResult[] = []
   if (s2.status === "fulfilled") results.push(...s2.value)

@@ -1,4 +1,5 @@
 import { config } from "./config.js"
+import { fetchWithRetry, stagger } from "./retry.js"
 
 export interface PaperResult {
   title: string
@@ -21,7 +22,7 @@ export async function searchOpenAlex(query: string, limit: number): Promise<Pape
   })
   if (mailto) params.set("mailto", mailto)
 
-  const resp = await fetch(`${baseUrl}/works?${params}`, {
+  const resp = await fetchWithRetry(`${baseUrl}/works?${params}`, {
     headers: mailto ? { "User-Agent": `OpenAlex/${mailto}` } : {},
   })
   if (!resp.ok) return []
@@ -75,7 +76,7 @@ export async function searchSemanticScholar(query: string, limit: number): Promi
   const headers: Record<string, string> = {}
   if (apiKey) headers["x-api-key"] = apiKey
 
-  const resp = await fetch(`${baseUrl}/paper/search?${params}`, { headers })
+  const resp = await fetchWithRetry(`${baseUrl}/paper/search?${params}`, { headers })
   if (!resp.ok) return []
 
   const data = await resp.json()
@@ -113,7 +114,7 @@ export async function searchCrossref(query: string, limit: number): Promise<Pape
   })
   if (mailto) params.set("mailto", mailto)
 
-  const resp = await fetch(`${baseUrl}?${params}`)
+  const resp = await fetchWithRetry(`${baseUrl}?${params}`)
   if (!resp.ok) return []
 
   const data = await resp.json()
@@ -228,10 +229,12 @@ export async function searchPapers(
   let all: PaperResult[] = [...s2]
 
   if (all.length < perSource) {
-    const [oa, cr] = await Promise.allSettled([
-      searchOpenAlex(combinedQuery, perSource),
-      searchCrossref(combinedQuery, perSource),
-    ])
+    const [oa, cr] = await Promise.allSettled(
+      stagger([
+        () => searchOpenAlex(combinedQuery, perSource),
+        () => searchCrossref(combinedQuery, perSource),
+      ]),
+    )
     if (oa.status === "fulfilled") all = all.concat(oa.value)
     else errors.push(`OpenAlex: ${oa.reason}`)
     if (cr.status === "fulfilled") all = all.concat(cr.value)

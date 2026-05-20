@@ -1,5 +1,6 @@
 import { PaperResult, searchSemanticScholar, searchOpenAlex, searchCrossref, deduplicate } from "./paper-search.js"
 import { PaperDetail, getPaperDetailRaw } from "./paper-detail.js"
+import { stagger } from "./retry.js"
 
 function stripXml(html: string): string {
   return html.replace(/<\/?[a-zA-Z][^>]*>/g, "").trim()
@@ -89,10 +90,12 @@ export async function analyzePapers(
   let all: PaperResult[] = [...s2]
 
   if (all.length < perSource) {
-    const [oa, cr] = await Promise.allSettled([
-      searchOpenAlex(combinedQuery, perSource),
-      searchCrossref(combinedQuery, perSource),
-    ])
+    const [oa, cr] = await Promise.allSettled(
+      stagger([
+        () => searchOpenAlex(combinedQuery, perSource),
+        () => searchCrossref(combinedQuery, perSource),
+      ]),
+    )
     if (oa.status === "fulfilled") all = all.concat(oa.value)
     if (cr.status === "fulfilled") all = all.concat(cr.value)
   }

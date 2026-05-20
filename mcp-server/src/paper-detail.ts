@@ -1,4 +1,5 @@
 import { config } from "./config.js"
+import { fetchWithRetry, stagger } from "./retry.js"
 
 export interface PaperDetail {
   title: string
@@ -38,7 +39,7 @@ function formatDetail(p: PaperDetail): string {
 }
 
 export async function getByDoiCrossref(doi: string): Promise<PaperDetail | null> {
-  const resp = await fetch(`${config.crossref.baseUrl}/${encodeURIComponent(doi)}`)
+  const resp = await fetchWithRetry(`${config.crossref.baseUrl}/${encodeURIComponent(doi)}`)
   if (!resp.ok) return null
 
   const data = await resp.json()
@@ -75,7 +76,7 @@ export async function getByDoiSemantic(doi: string): Promise<PaperDetail | null>
   const headers: Record<string, string> = {}
   if (apiKey) headers["x-api-key"] = apiKey
 
-  const resp = await fetch(
+  const resp = await fetchWithRetry(
     `${baseUrl}/paper/DOI:${encodeURIComponent(doi)}?fields=${fields}`,
     { headers },
   )
@@ -110,7 +111,7 @@ export async function getByDoiSemantic(doi: string): Promise<PaperDetail | null>
 export async function getByOpenAlex(doi: string): Promise<PaperDetail | null> {
   const { mailto, baseUrl } = config.openalex
   const url = `${baseUrl}/works/doi:${encodeURIComponent(doi)}${mailto ? `?mailto=${mailto}` : ""}`
-  const resp = await fetch(url)
+  const resp = await fetchWithRetry(url)
   if (!resp.ok) return null
 
   const w = await resp.json()
@@ -158,7 +159,7 @@ async function getByS2Id(paperId: string): Promise<PaperDetail | null> {
   const headers: Record<string, string> = {}
   if (apiKey) headers["x-api-key"] = apiKey
 
-  const resp = await fetch(
+  const resp = await fetchWithRetry(
     `${baseUrl}/paper/${encodeURIComponent(paperId)}?fields=${fields}`,
     { headers },
   )
@@ -195,7 +196,7 @@ async function getByS2IdsBatch(paperIds: string[]): Promise<PaperDetail[]> {
   const headers: Record<string, string> = { "Content-Type": "application/json" }
   if (apiKey) headers["x-api-key"] = apiKey
 
-  const resp = await fetch(
+  const resp = await fetchWithRetry(
     `${baseUrl}/paper/batch?fields=${encodeURIComponent(fields)}`,
     {
       method: "POST",
@@ -242,11 +243,13 @@ async function getByS2IdsBatch(paperIds: string[]): Promise<PaperDetail[]> {
 export async function getPaperDetailRaw(doi: string): Promise<PaperDetail | null> {
   const cleanDoi = doi.trim().replace(/^https?:\/\/doi\.org\//, "")
 
-  const [cr, s2, oa] = await Promise.allSettled([
-    getByDoiCrossref(cleanDoi),
-    getByDoiSemantic(cleanDoi),
-    getByOpenAlex(cleanDoi),
-  ])
+  const [cr, s2, oa] = await Promise.allSettled(
+    stagger([
+      () => getByDoiCrossref(cleanDoi),
+      () => getByDoiSemantic(cleanDoi),
+      () => getByOpenAlex(cleanDoi),
+    ]),
+  )
 
   const results: PaperDetail[] = [
     ...(cr.status === "fulfilled" && cr.value ? [cr.value] : []),
@@ -263,11 +266,13 @@ export async function getPaperDetailRaw(doi: string): Promise<PaperDetail | null
 export async function getPaperDetail(doi: string): Promise<string> {
   const cleanDoi = doi.trim().replace(/^https?:\/\/doi\.org\//, "")
 
-  const [cr, s2, oa] = await Promise.allSettled([
-    getByDoiCrossref(cleanDoi),
-    getByDoiSemantic(cleanDoi),
-    getByOpenAlex(cleanDoi),
-  ])
+  const [cr, s2, oa] = await Promise.allSettled(
+    stagger([
+      () => getByDoiCrossref(cleanDoi),
+      () => getByDoiSemantic(cleanDoi),
+      () => getByOpenAlex(cleanDoi),
+    ]),
+  )
 
   const results: PaperDetail[] = [
     ...(cr.status === "fulfilled" && cr.value ? [cr.value] : []),

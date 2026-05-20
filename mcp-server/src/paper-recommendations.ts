@@ -1,4 +1,5 @@
 import { config } from "./config.js"
+import { fetchWithRetry } from "./retry.js"
 
 interface RecommendedPaper {
   paperId: string
@@ -44,7 +45,7 @@ async function getRecommendationsForPaper(
   if (apiKey) headers["x-api-key"] = apiKey
 
   const fields = "title,authors,year,abstract,externalIds,url,citationCount,venue"
-  const resp = await fetch(
+  const resp = await fetchWithRetry(
     `${baseUrl.replace("/graph/v1", "")}/recommendations/v1/papers/forpaper/${encodeURIComponent(paperId)}?limit=${Math.min(limit, 500)}&from=${fromPool}&fields=${encodeURIComponent(fields)}`,
     { headers },
   )
