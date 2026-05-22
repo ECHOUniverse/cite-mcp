@@ -18,7 +18,7 @@ import { citeText, formatCiteTextReport } from "./cite-text.js"
 const server = new Server(
   {
     name: "cite-mcp",
-    version: "2.0.0",
+    version: "2.1.1",
   },
   {
     capabilities: {

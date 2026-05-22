@@ -1,6 +1,6 @@
 # cite-mcp
 
-**MCP Server for academic paper research** — search across Semantic Scholar, OpenAlex, and Crossref, get paper details, discover related works, and format citations.
+**MCP Server for academic paper research** — search across Semantic Scholar, OpenAlex, and Crossref, get paper details, discover related works, format citations, and auto-insert references into text.
 
 ## Quick Start
 
@@ -25,15 +25,20 @@ Configure your MCP client:
 
 | Tool | Description |
 |------|-------------|
-| `paper_search` | Multi-source search (S2 + OA + Crossref, auto-dedup) |
-| `search_semantic_scholar` | Single-source search, advanced query syntax |
-| `search_openalex` | Broad multidisciplinary search |
-| `search_crossref` | DOI metadata search |
-| `paper_detail` | Full paper details by DOI (3 sources merged) |
-| `get_by_s2id` / `get_by_s2ids_batch` | Paper details by S2 Paper ID (single/batch) |
-| `paper_recommendations` | Related paper discovery |
-| `paper_analysis` | Cross-paper comparison + per-paper summaries |
-| `citation` | Citation formatting (APA / MLA / GB/T 7714 / BibTeX) |
+| `paper_search` | Multi-source search (all/s2/openalex/crossref, auto-dedup) |
+| `paper_detail` | Full paper details by DOI, S2 Paper ID, or batch IDs |
+| `paper_recommendations` | Related paper discovery from a seed paper |
+| `citation` | Citation formatting — single paper (APA/MLA/GB7714/BibTeX/Elsevier) or multi-paper report |
+| `paper_analysis` | Cross-paper comparison + per-paper summaries for literature review |
+| `cite_text` | Auto-find supporting papers for claims in a text paragraph, outputs citation report |
+
+## Prompts
+
+| Prompt | Description |
+|--------|-------------|
+| `literature_survey` | Guided workflow: search → detail → recommendations for systematic literature review |
+| `paper_verify` | Claim verification: extract claims → bidirectional search → grade (A/B/C) → report |
+| `cite_text` | Text citation: analyze text → find supporting papers → output citation report |
 
 ## Configuration
 
