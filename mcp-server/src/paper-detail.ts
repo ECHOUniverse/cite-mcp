@@ -1,11 +1,13 @@
 import { config } from "./config.js"
 import { fetchWithRetry, stagger } from "./retry.js"
+import { formatAuthors } from "./utils.js"
 
 export interface PaperDetail {
   title: string
   authors: string
   year: number | null
   abstract: string
+  tldr?: string
   doi: string | null
   url: string
   venue: string | null
@@ -26,6 +28,9 @@ function formatDetail(p: PaperDetail): string {
     `引用数: ${p.citationCount ?? "未知"}`,
     `来源: ${p.source}`,
   ]
+  if (p.tldr) {
+    lines.push(`\n一句话摘要: ${p.tldr}`)
+  }
   if (p.abstract) {
     lines.push(`\n摘要:\n${p.abstract}`)
   }
@@ -46,9 +51,7 @@ export async function getByDoiCrossref(doi: string): Promise<PaperDetail | null>
   const item = data.message
   if (!item) return null
 
-  const authors = (item.author || [])
-    .map((a: any) => `${a.family}, ${a.given}`)
-    .join("; ")
+  const authors = formatAuthors(item.author || [], "familyGiven")
 
   const venue = item["container-title"]?.[0] || null
   const refs = (item.reference || []).slice(0, 10).map((r: any) => ({
@@ -83,10 +86,7 @@ export async function getByDoiSemantic(doi: string): Promise<PaperDetail | null>
   if (!resp.ok) return null
 
   const p = await resp.json()
-  const authors = (p.authors || [])
-    .map((a: any) => a.name)
-    .filter(Boolean)
-    .join("; ")
+  const authors = formatAuthors(p.authors || [])
 
   const refs = (p.references || []).slice(0, 10).map((r: any) => ({
     title: r.title || "未知",
@@ -99,6 +99,7 @@ export async function getByDoiSemantic(doi: string): Promise<PaperDetail | null>
     authors,
     year: p.year || null,
     abstract: p.abstract || "",
+    tldr: p.tldr?.text || undefined,
     doi: p.externalIds?.DOI || doi,
     url: p.url || `${config.doi.baseUrl}/${doi}`,
     venue: p.venue || null,
@@ -109,8 +110,12 @@ export async function getByDoiSemantic(doi: string): Promise<PaperDetail | null>
 }
 
 export async function getByOpenAlex(doi: string): Promise<PaperDetail | null> {
-  const { mailto, baseUrl } = config.openalex
-  const url = `${baseUrl}/works/doi:${encodeURIComponent(doi)}${mailto ? `?mailto=${mailto}` : ""}`
+  const { mailto, apiKey, baseUrl } = config.openalex
+  const params = new URLSearchParams()
+  if (mailto) params.set("mailto", mailto)
+  if (apiKey) params.set("api_key", apiKey)
+  const qs = params.toString()
+  const url = `${baseUrl}/works/doi:${encodeURIComponent(doi)}${qs ? `?${qs}` : ""}`
   const resp = await fetchWithRetry(url)
   if (!resp.ok) return null
 
@@ -166,10 +171,7 @@ async function getByS2Id(paperId: string): Promise<PaperDetail | null> {
   if (!resp.ok) return null
 
   const p = await resp.json()
-  const authors = (p.authors || [])
-    .map((a: any) => a.name)
-    .filter(Boolean)
-    .join("; ")
+  const authors = formatAuthors(p.authors || [])
 
   const refs = (p.references || []).slice(0, 10).map((r: any) => ({
     title: r.title || "未知",
@@ -182,6 +184,7 @@ async function getByS2Id(paperId: string): Promise<PaperDetail | null> {
     authors,
     year: p.year || null,
     abstract: p.abstract || "",
+    tldr: p.tldr?.text || undefined,
     doi: p.externalIds?.DOI || null,
     url: p.url || "",
     venue: p.venue || null,
@@ -227,6 +230,7 @@ async function getByS2IdsBatch(paperIds: string[]): Promise<PaperDetail[]> {
       authors,
       year: p.year || null,
       abstract: p.abstract || "",
+      tldr: p.tldr?.text || undefined,
       doi: p.externalIds?.DOI || null,
       url: p.url || "",
       venue: p.venue || null,

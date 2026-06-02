@@ -1,6 +1,6 @@
 {
   "name": "cite-mcp",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "MCP Server for academic paper search, detail, recommendations, and citation formatting",
   "type": "module",
   "main": "dist/index.js",
@@ -33,13 +33,15 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsc --watch",
+    "test": "node --import tsx --test src/__tests__/*.test.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.13.0"
+    "@modelcontextprotocol/sdk": "^1.29.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "tsx": "^4.22.4",
     "typescript": "^5.7.0"
   }
 }

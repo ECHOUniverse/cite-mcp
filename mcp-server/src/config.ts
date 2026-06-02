@@ -35,10 +35,11 @@ export const config = {
     apiKey: process.env.S2_API_KEY ?? "",
     baseUrl: "https://api.semanticscholar.org/graph/v1",
     fields:
-      "title,authors,year,abstract,externalIds,url,citationCount,venue,references.title,references.year,references.externalIds",
+      "title,authors,year,abstract,tldr,externalIds,url,citationCount,venue,references.title,references.year,references.externalIds",
   },
   openalex: {
     mailto: process.env.OPENALEX_MAILTO ?? "",
+    apiKey: process.env.OPENALEX_API_KEY ?? "",
     baseUrl: "https://api.openalex.org",
   },
   crossref: {

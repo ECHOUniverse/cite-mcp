@@ -18,7 +18,7 @@ import { citeText, formatCiteTextReport } from "./cite-text.js"
 const server = new Server(
   {
     name: "cite-mcp",
-    version: "2.1.1",
+    version: "2.2.0",
   },
   {
     capabilities: {
@@ -60,6 +60,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         },
         required: ["query"],
       },
+      annotations: {
+        title: "论文搜索",
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
     },
     {
       name: "paper_detail",
@@ -81,6 +88,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             description: "批量查询的 Semantic Scholar Paper ID 列表（最多500个）",
           },
         },
+      },
+      annotations: {
+        title: "论文详情",
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
       },
     },
     {
@@ -106,6 +120,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
         },
         required: ["paperId"],
+      },
+      annotations: {
+        title: "论文推荐",
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
       },
     },
     {
@@ -152,6 +173,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
         },
       },
+      annotations: {
+        title: "引文格式化",
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
     },
     {
       name: "paper_analysis",
@@ -174,6 +202,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
         },
         required: ["query"],
+      },
+      annotations: {
+        title: "文献分析",
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
       },
     },
     {
@@ -205,6 +240,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
         },
         required: ["text", "claims"],
+      },
+      annotations: {
+        title: "文本引文",
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
       },
     },
   ],
@@ -395,33 +437,39 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     switch (name) {
       // 1. paper_search — unified search
       case "paper_search": {
-        const result = await searchPapers(
-          String(args?.query ?? ""),
-          String(args?.context ?? ""),
-          Number(args?.limit ?? 10),
-          String(args?.source ?? "all"),
-        )
+        const query = String(args?.query ?? "").trim()
+        if (!query) throw new Error("query 参数为必填，且不能为空字符串")
+        const limit = Number(args?.limit ?? 10)
+        if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw new Error("limit 参数必须在 1-100 之间")
+        const context = String(args?.context ?? "")
+        const source = String(args?.source ?? "all")
+        const result = await searchPapers(query, context, limit, source)
         return { content: [{ type: "text", text: result }] }
       }
 
       // 2. paper_detail — unified detail
       case "paper_detail": {
+        const doi = args?.doi ? String(args.doi).trim() : undefined
+        const paperId = args?.paperId ? String(args.paperId).trim() : undefined
         const paperIds = Array.isArray(args?.paperIds) ? args.paperIds.map(String) : undefined
-        const result = await getPaperDetailUnified({
-          doi: args?.doi ? String(args.doi) : undefined,
-          paperId: args?.paperId ? String(args.paperId) : undefined,
-          paperIds,
-        })
+        if (!doi && !paperId && !(paperIds && paperIds.length > 0)) {
+          throw new Error("请提供 doi、paperId 或 paperIds 参数之一")
+        }
+        if (paperIds && paperIds.length > 500) {
+          throw new Error("paperIds 最多支持 500 个 ID")
+        }
+        const result = await getPaperDetailUnified({ doi, paperId, paperIds })
         return { content: [{ type: "text", text: result }] }
       }
 
       // 3. paper_recommendations
       case "paper_recommendations": {
-        const result = await getPaperRecommendations(
-          String(args?.paperId ?? ""),
-          Number(args?.limit ?? 10),
-          String(args?.from ?? "recent"),
-        )
+        const paperId = String(args?.paperId ?? "").trim()
+        if (!paperId) throw new Error("paperId 参数为必填，且不能为空字符串")
+        const limit = Number(args?.limit ?? 10)
+        if (!Number.isInteger(limit) || limit < 1 || limit > 500) throw new Error("limit 参数必须在 1-500 之间")
+        const from = String(args?.from ?? "recent")
+        const result = await getPaperRecommendations(paperId, limit, from)
         return { content: [{ type: "text", text: result }] }
       }
 
@@ -429,7 +477,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "citation": {
         const style = args?.style ? String(args.style) : "elsevier"
 
-        if (args?.papers && Array.isArray(args.papers) && style === "elsevier") {
+        if (args?.papers && Array.isArray(args.papers) && args.papers.length > 0) {
+          // 报告模式
           const papers = (args.papers as any[]).map(p => ({
             authors: String(p.authors ?? ""),
             title: String(p.title ?? ""),
@@ -447,10 +496,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           return { content: [{ type: "text", text: result }] }
         }
 
+        // 单篇模式
+        const authors = String(args?.authors ?? "").trim()
+        const title = String(args?.title ?? "").trim()
+        const year = Number(args?.year ?? 0)
+        if (!authors) throw new Error("authors 参数为必填（单篇模式），需提供至少一位作者")
+        if (!title) throw new Error("title 参数为必填（单篇模式）")
+        if (!year || year < 1000 || year > 2100) throw new Error("year 参数无效（单篇模式），需提供有效的出版年份")
+
         const result = await formatCitation({
-          authors: String(args?.authors ?? ""),
-          title: String(args?.title ?? ""),
-          year: Number(args?.year ?? 0),
+          authors,
+          title,
+          year,
           venue: String(args?.venue ?? ""),
           doi: args?.doi ? String(args.doi) : undefined,
           url: args?.url ? String(args.url) : undefined,
@@ -464,26 +521,28 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       // 5. paper_analysis
       case "paper_analysis": {
-        const result = await analyzePapers(
-          String(args?.query ?? ""),
-          Number(args?.count ?? 5),
-          String(args?.context ?? ""),
-        )
+        const query = String(args?.query ?? "").trim()
+        if (!query) throw new Error("query 参数为必填，且不能为空字符串")
+        const count = Number(args?.count ?? 5)
+        if (!Number.isInteger(count) || count < 1 || count > 20) throw new Error("count 参数必须在 1-20 之间")
+        const context = String(args?.context ?? "")
+        const result = await analyzePapers(query, count, context)
         return { content: [{ type: "text", text: result }] }
       }
 
       // 6. cite_text
       case "cite_text": {
-        const text = String(args?.text ?? "")
+        const text = String(args?.text ?? "").trim()
+        if (!text) throw new Error("text 参数为必填，且不能为空字符串")
         const claims = Array.isArray(args?.claims)
           ? (args.claims as any[]).map(c => ({
-              sentence: String(c.sentence ?? ""),
+              sentence: String(c.sentence ?? "").trim(),
               context: c.context ? String(c.context) : undefined,
-            }))
+            })).filter(c => c.sentence)
           : []
-        if (!text) throw new Error("text 参数为必填")
-        if (claims.length === 0) throw new Error("claims 参数为必填，且至少包含一个论点")
+        if (claims.length === 0) throw new Error("claims 参数为必填，且至少包含一个有效论点")
         const limit = Number(args?.limit ?? 2)
+        if (!Number.isInteger(limit) || limit < 1 || limit > 10) throw new Error("limit 参数必须在 1-10 之间")
         const result = await citeText(text, claims, limit)
         const report = formatCiteTextReport(result)
         return { content: [{ type: "text", text: report }] }

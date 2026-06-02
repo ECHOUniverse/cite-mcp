@@ -1,11 +1,13 @@
 import { config } from "./config.js"
 import { fetchWithRetry, stagger } from "./retry.js"
+import { formatAuthors, truncateAbstract } from "./utils.js"
 
 export interface PaperResult {
   title: string
   authors: string
   year: number | null
   abstract: string
+  tldr?: string
   doi: string | null
   url: string
   source: string
@@ -13,14 +15,19 @@ export interface PaperResult {
   venue: string | null
 }
 
-export async function searchOpenAlex(query: string, limit: number): Promise<PaperResult[]> {
-  const { mailto, baseUrl } = config.openalex
+export async function searchOpenAlex(query: string, limit: number, mode: "keyword" | "semantic" = "keyword"): Promise<PaperResult[]> {
+  const { mailto, apiKey, baseUrl } = config.openalex
   const params = new URLSearchParams({
-    search: query,
     per_page: String(Math.min(limit, 50)),
     select: "title,authorships,publication_year,doi,abstract_inverted_index,cited_by_count,primary_location",
   })
+  if (mode === "semantic") {
+    params.set("search.semantic", query)
+  } else {
+    params.set("search", query)
+  }
   if (mailto) params.set("mailto", mailto)
+  if (apiKey) params.set("api_key", apiKey)
 
   const resp = await fetchWithRetry(`${baseUrl}/works?${params}`, {
     headers: mailto ? { "User-Agent": `OpenAlex/${mailto}` } : {},
@@ -70,7 +77,7 @@ export async function searchSemanticScholar(query: string, limit: number): Promi
   const params = new URLSearchParams({
     query,
     limit: String(Math.min(limit, 100)),
-    fields: "title,authors,year,abstract,externalIds,url,citationCount,venue",
+    fields: "title,authors,year,abstract,tldr,externalIds,url,citationCount,venue",
   })
 
   const headers: Record<string, string> = {}
@@ -83,10 +90,7 @@ export async function searchSemanticScholar(query: string, limit: number): Promi
   const results: PaperResult[] = []
 
   for (const p of data.data || []) {
-    const authors = (p.authors || [])
-      .map((a: any) => a.name)
-      .filter(Boolean)
-      .join("; ")
+    const authors = formatAuthors(p.authors || [])
 
     const ids = p.externalIds || {}
     const doi = ids.DOI || null
@@ -96,6 +100,7 @@ export async function searchSemanticScholar(query: string, limit: number): Promi
       authors,
       year: p.year || null,
       abstract: p.abstract || "",
+      tldr: p.tldr?.text || undefined,
       doi,
       url: p.url || (doi ? `${config.doi.baseUrl}/${doi}` : ""),
       source: "Semantic Scholar",
@@ -121,9 +126,7 @@ export async function searchCrossref(query: string, limit: number): Promise<Pape
   const results: PaperResult[] = []
 
   for (const item of (data.message?.items || [])) {
-    const authors = (item.author || [])
-      .map((a: any) => `${a.family}, ${a.given}`)
-      .join("; ")
+    const authors = formatAuthors(item.author || [], "familyGiven")
 
     const titles = item.title || []
     const venue = item["container-title"]?.[0] || null
@@ -168,8 +171,11 @@ function formatResults(papers: PaperResult[]): string {
         `   引用数: ${p.citationCount ?? "未知"}`,
         `   来源: ${p.source}`,
       ]
+      if (p.tldr) {
+        lines.push(`   TLDR: ${p.tldr}`)
+      }
       if (p.abstract) {
-        const shortened = p.abstract.length > 500 ? p.abstract.slice(0, 500) + "..." : p.abstract
+        const shortened = truncateAbstract(p.abstract)
         lines.push(`   摘要: ${shortened}`)
       }
       return lines.join("\n")

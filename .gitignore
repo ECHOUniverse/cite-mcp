@@ -56,5 +56,9 @@ opencode.jsonc
 # Claude Code project instructions (local override)
 /CLAUDE.md
 
+# Project planning documents (local only)
+/ROADMAP.md
+/IMPLEMENTATION_PLAN_P1P2.md
+
 # npm project-level config (may contain auth tokens)
 .npmrc

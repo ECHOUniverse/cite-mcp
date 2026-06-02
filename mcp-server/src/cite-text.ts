@@ -26,42 +26,56 @@ function extractKeyTerms(sentence: string, context: string = ""): string {
   return [...new Set(words)].slice(0, 8).join(" ")
 }
 
-// Progressive query strategies
+// Progressive query strategies: context-first for precision
 function buildQueries(sentence: string, context: string): string[] {
   const queries: string[] = []
 
-  // Level 1: sentence + context (most specific)
-  queries.push(context ? `${sentence} ${context}` : sentence)
-
-  // Level 2: context alone (if exists), or first 60 chars of sentence
+  // Level 1: context alone (most specific—AI-extracted keywords)
   if (context && context.length > 5) {
     queries.push(context)
+  } else {
+    // No context: use sentence directly
+    queries.push(sentence)
+  }
+
+  // Level 2: sentence + context (broader recall)
+  if (context && context.length > 5) {
+    queries.push(`${sentence} ${context}`)
   } else {
     queries.push(sentence.slice(0, 80))
   }
 
-  // Level 3: key terms only
+  // Level 3: key terms only (last resort)
   queries.push(extractKeyTerms(sentence, context))
 
   return queries
 }
 
-// Search all three sources in parallel, deduplicate
-async function searchAllSources(query: string, limit: number): Promise<PaperResult[]> {
-  const [s2, oa, cr] = await Promise.allSettled(
+// S2-first search: S2 has best academic paper indexing quality.
+// Only fall back to OA+CR when S2 results are insufficient.
+async function searchAllSources(query: string, limit: number, useSemantic: boolean = false, s2Only: boolean = false): Promise<PaperResult[]> {
+  // 1. Always search S2 first — highest precision for academic papers
+  const s2 = await searchSemanticScholar(query, limit).catch(() => [] as PaperResult[])
+
+  // If S2 results are sufficient or s2Only flag is set, skip OA/CR
+  if (s2Only || s2.length >= limit) {
+    return s2
+  }
+
+  // 2. S2 insufficient — supplement with OA + CR
+  const [oa, cr] = await Promise.allSettled(
     stagger([
-      () => searchSemanticScholar(query, limit),
-      () => searchOpenAlex(query, limit),
+      () => searchOpenAlex(query, limit, useSemantic ? "semantic" : "keyword"),
       () => searchCrossref(query, limit),
     ]),
   )
 
-  const results: PaperResult[] = []
-  if (s2.status === "fulfilled") results.push(...s2.value)
-  if (oa.status === "fulfilled") results.push(...oa.value)
-  if (cr.status === "fulfilled") results.push(...cr.value)
+  const supplements: PaperResult[] = []
+  if (oa.status === "fulfilled") supplements.push(...oa.value)
+  if (cr.status === "fulfilled") supplements.push(...cr.value)
 
-  return deduplicate(results)
+  // S2 results first (higher quality), OA/CR supplements appended
+  return deduplicate([...s2, ...supplements])
 }
 
 // Search for a claim with progressive query refinement
@@ -69,11 +83,17 @@ async function searchForClaim(claim: ClaimInput, limit: number): Promise<PaperRe
   const queries = buildQueries(claim.sentence, claim.context || "")
   let allFound: PaperResult[] = []
   const seen = new Set<string>()
+  let queryIndex = 0
 
   for (const query of queries) {
     if (allFound.length >= limit) break
 
-    const papers = await searchAllSources(query, limit * 2)
+    // L1 (most precise): S2 only for highest match quality
+    // L2+: S2-first with OA/CR supplement, semantic for first 2 levels
+    const s2Only = queryIndex === 0
+    const useSemantic = queryIndex < 2
+    const papers = await searchAllSources(query, limit * 2, useSemantic, s2Only)
+    queryIndex++
     const newPapers = papers.filter(p => {
       const key = p.doi ? `doi:${p.doi}` : `${p.title}:${p.year}`
       const lower = key.toLowerCase()

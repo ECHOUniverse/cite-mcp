@@ -1,5 +1,6 @@
 import { config } from "./config.js"
 import { fetchWithRetry } from "./retry.js"
+import { formatAuthors, truncateAbstract } from "./utils.js"
 
 interface RecommendedPaper {
   paperId: string
@@ -7,6 +8,7 @@ interface RecommendedPaper {
   authors: string
   year: number | null
   abstract: string
+  tldr?: string
   doi: string | null
   url: string
   venue: string | null
@@ -26,8 +28,11 @@ function formatRecommendations(papers: RecommendedPaper[], sourcePaperId: string
         `   URL: ${p.url || "无"}`,
         `   引用数: ${p.citationCount ?? "未知"}`,
       ]
+      if (p.tldr) {
+        lines.push(`   TLDR: ${p.tldr}`)
+      }
       if (p.abstract) {
-        const shortened = p.abstract.length > 500 ? p.abstract.slice(0, 500) + "..." : p.abstract
+        const shortened = truncateAbstract(p.abstract)
         lines.push(`   摘要: ${shortened}`)
       }
       return lines.join("\n")
@@ -44,7 +49,7 @@ async function getRecommendationsForPaper(
   const headers: Record<string, string> = {}
   if (apiKey) headers["x-api-key"] = apiKey
 
-  const fields = "title,authors,year,abstract,externalIds,url,citationCount,venue"
+  const fields = "title,authors,year,abstract,tldr,externalIds,url,citationCount,venue"
   const resp = await fetchWithRetry(
     `${baseUrl.replace("/graph/v1", "")}/recommendations/v1/papers/forpaper/${encodeURIComponent(paperId)}?limit=${Math.min(limit, 500)}&from=${fromPool}&fields=${encodeURIComponent(fields)}`,
     { headers },
@@ -55,10 +60,7 @@ async function getRecommendationsForPaper(
   const results: RecommendedPaper[] = []
 
   for (const p of data.recommendedPapers || []) {
-    const authors = (p.authors || [])
-      .map((a: any) => a.name)
-      .filter(Boolean)
-      .join("; ")
+    const authors = formatAuthors(p.authors || [])
 
     const ids = p.externalIds || {}
     const doi = ids.DOI || null
@@ -69,6 +71,7 @@ async function getRecommendationsForPaper(
       authors,
       year: p.year || null,
       abstract: p.abstract || "",
+      tldr: p.tldr?.text || undefined,
       doi,
       url: p.url || (doi ? `${config.doi.baseUrl}/${doi}` : ""),
       venue: p.venue || null,

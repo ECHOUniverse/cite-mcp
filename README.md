@@ -46,7 +46,8 @@ This server provides **academic paper research capabilities** — search across 
 | 📖 **Paper Detail** | 3 sources merged | Title, authors, abstract, references, citation count |
 | 🎯 **Recommendations** | Semantic Scholar | Related paper discovery |
 | 📊 **Paper Analysis** | Semantic Scholar + OpenAlex + Crossref | Cross-paper comparison table + per-paper summaries |
-| 📝 **Citation Formatting** | — | APA 7th / MLA 9th / GB/T 7714-2015 / BibTeX |
+| 📝 **Citation Formatting** | — | APA 7th / MLA 9th / GB/T 7714-2015 / BibTeX / Elsevier report |
+| ✍️ **Cite Text** | Semantic Scholar + OpenAlex + Crossref | Insert citations into text, three-section report (body → references → citation notes) |
 
 ---
 
@@ -139,6 +140,7 @@ Edit `.env` with your API keys:
 |----------|----------|---------|
 | `S2_API_KEY` | No | Increases Semantic Scholar rate limit (see [API Keys](#-api-keys)) |
 | `OPENALEX_MAILTO` | No | Enables OpenAlex polite pool (higher rate limit) |
+| `OPENALEX_API_KEY` | No | OpenAlex API key for higher rate limit (free: openalex.org/account) |
 | `CROSSREF_MAILTO` | No | Enables Crossref polite pool (higher rate limit) |
 
 **Without any keys**, the server still works with default rate limits (sufficient for casual use).
@@ -252,6 +254,7 @@ API keys are **entirely optional**. Without them, the server works with default 
 |---------|-----|-----------|---------|
 | **Semantic Scholar** | `S2_API_KEY` | [Request here](https://www.semanticscholar.org/product/api) | 100 req/s (vs. 1 req/s without) |
 | **OpenAlex** | `OPENALEX_MAILTO` | Just your email | Polite pool: ~10x faster |
+| **OpenAlex** | `OPENALEX_API_KEY` | [Get free key](https://openalex.org/account) | Higher rate limit |
 | **Crossref** | `CROSSREF_MAILTO` | Just your email | Polite pool: ~10x faster |
 
 Set them in your environment:
@@ -319,7 +322,8 @@ Place your `.env` at either location. The file is already in `.gitignore`, so yo
 | Tool | Description |
 |------|-------------|
 | `paper_recommendations` | Find related papers via S2 recommendations |
-| `citation` | Format: APA / MLA / GB/T 7714-2015 / BibTeX |
+| `citation` | Format: APA / MLA / GB/T 7714-2015 / BibTeX / Elsevier three-section report |
+| `cite_text` | Auto-insert citations into text: extract claims → S2-first search → three-section report |
 
 ---
 

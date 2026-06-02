@@ -46,7 +46,8 @@
 | 📖 **论文详情** | 合并 3 个数据源 | 标题、作者、摘要、参考文献、引用数 |
 | 🎯 **论文推荐** | Semantic Scholar | 基于已知论文发现相关文献 |
 | 📊 **文献分析** | Semantic Scholar + OpenAlex + Crossref | 横向对比概览表 + 每篇文献总结和数据表 |
-| 📝 **引文格式化** | — | APA 7th / MLA 9th / GB/T 7714-2015 / BibTeX |
+| 📝 **引文格式化** | — | APA 7th / MLA 9th / GB/T 7714-2015 / BibTeX / Elsevier 三段式报告 |
+| ✍️ **文本引文** | Semantic Scholar + OpenAlex + Crossref | 自动为文本插入引文，输出三段式报告（正文引用 → 参考文献 → 引文说明） |
 
 ---
 
@@ -137,6 +138,7 @@ cp .env.example .env
 |------|--------|------|
 | `S2_API_KEY` | 否 | 提升 Semantic Scholar 调用频率（见 [API Keys](#-api-keys)） |
 | `OPENALEX_MAILTO` | 否 | 启用 OpenAlex 礼貌池（更高频率限制） |
+| `OPENALEX_API_KEY` | 否 | OpenAlex API Key，更高频率限制（免费申请：openalex.org/account） |
 | `CROSSREF_MAILTO` | 否 | 启用 Crossref 礼貌池（更高频率限制） |
 
 **不配置任何 Key 也能正常使用**，默认频率限制对日常使用已经足够。
@@ -250,6 +252,7 @@ API Keys **完全可选**。不配置也能正常使用，只是频率限制较�
 |------|---------|---------|------|
 | **Semantic Scholar** | `S2_API_KEY` | [申请地址](https://www.semanticscholar.org/product/api) | 100 请求/秒（无 Key 仅 1 请求/秒） |
 | **OpenAlex** | `OPENALEX_MAILTO` | 填写你的邮箱即可 | 礼貌池，约快 10 倍 |
+| **OpenAlex** | `OPENALEX_API_KEY` | [免费申请](https://openalex.org/account) | 更高频率限制 |
 | **Crossref** | `CROSSREF_MAILTO` | 填写你的邮箱即可 | 礼貌池，约快 10 倍 |
 
 配置方式：
@@ -317,7 +320,8 @@ export CROSSREF_MAILTO="你的@邮箱.com"
 | 工具 | 说明 |
 |------|------|
 | `paper_recommendations` | 通过 S2 推荐引擎发现相关论文 |
-| `citation` | 格式化：APA / MLA / GB/T 7714-2015 / BibTeX |
+| `citation` | 格式化：APA / MLA / GB/T 7714-2015 / BibTeX / Elsevier 三段式报告 |
+| `cite_text` | 文本自动引文：提取论点 → S2优先搜索 → 三段式报告（正文引用 + 参考文献 + 引文说明） |
 
 ---
 
