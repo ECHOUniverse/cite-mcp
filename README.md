@@ -68,13 +68,19 @@ To configure your MCP client, point it to:
   "mcpServers": {
     "cite-mcp": {
       "command": "npx",
-      "args": ["cite-mcp"]
+      "args": ["cite-mcp"],
+      "env": {
+        "S2_API_KEY": "your-key",
+        "OPENALEX_MAILTO": "your@email.com",
+        "OPENALEX_API_KEY": "your-openalex-key",
+        "CROSSREF_MAILTO": "your@email.com"
+      }
     }
   }
 }
 ```
 
-> 💡 **API keys**: Set `S2_API_KEY`, `OPENALEX_MAILTO`, `CROSSREF_MAILTO` as environment variables if you want higher rate limits. See [Configuration](#-configuration).
+> 💡 `env` is optional — the server works without any API keys.
 
 ### Option B: Global Install
 
@@ -90,7 +96,12 @@ Then configure your MCP client:
   "mcpServers": {
     "cite-mcp": {
       "command": "cite-mcp",
-      "args": []
+      "args": [],
+      "env": {
+        "S2_API_KEY": "your-key",
+        "OPENALEX_MAILTO": "your@email.com",
+        "CROSSREF_MAILTO": "your@email.com"
+      }
     }
   }
 }
@@ -163,7 +174,12 @@ Use npx (recommended):
   "mcpServers": {
     "cite-mcp": {
       "command": "npx",
-      "args": ["cite-mcp"]
+      "args": ["cite-mcp"],
+      "env": {
+        "S2_API_KEY": "your-key",
+        "OPENALEX_MAILTO": "your@email.com",
+        "CROSSREF_MAILTO": "your@email.com"
+      }
     }
   }
 }
@@ -175,7 +191,12 @@ Or with global install:
   "mcpServers": {
     "cite-mcp": {
       "command": "cite-mcp",
-      "args": []
+      "args": [],
+      "env": {
+        "S2_API_KEY": "your-key",
+        "OPENALEX_MAILTO": "your@email.com",
+        "CROSSREF_MAILTO": "your@email.com"
+      }
     }
   }
 }
@@ -198,7 +219,12 @@ Edit `claude_desktop_config.json` (open via Claude Desktop → Settings → Deve
   "mcpServers": {
     "cite-mcp": {
       "command": "npx",
-      "args": ["cite-mcp"]
+      "args": ["cite-mcp"],
+      "env": {
+        "S2_API_KEY": "your-key",
+        "OPENALEX_MAILTO": "your@email.com",
+        "CROSSREF_MAILTO": "your@email.com"
+      }
     }
   }
 }
@@ -212,6 +238,7 @@ Edit `claude_desktop_config.json` (open via Claude Desktop → Settings → Deve
 |-------|-------|
 | Command | `npx` |
 | Arguments | `["cite-mcp"]` |
+| Environment Variables (env) | `S2_API_KEY`, `OPENALEX_MAILTO`, `CROSSREF_MAILTO` (all optional) |
 </details>
 
 <details>
@@ -225,7 +252,12 @@ Requires VS Code Insiders. Configure in VS Code settings (`settings.json`):
     "mcpServers": {
       "cite-mcp": {
         "command": "npx",
-        "args": ["cite-mcp"]
+        "args": ["cite-mcp"],
+        "env": {
+          "S2_API_KEY": "your-key",
+          "OPENALEX_MAILTO": "your@email.com",
+          "CROSSREF_MAILTO": "your@email.com"
+        }
       }
     }
   }
@@ -246,38 +278,73 @@ Once connected, ask your AI assistant:
 
 ## 🔧 Configuration
 
-### API Keys
+API keys are **entirely optional**. The server works without them, just with lower rate limits.
 
-API keys are **entirely optional**. Without them, the server works with default rate limits.
+### Configuration Methods (priority high to low)
 
-| Service | Key | How to Get | Benefit |
-|---------|-----|-----------|---------|
-| **Semantic Scholar** | `S2_API_KEY` | [Request here](https://www.semanticscholar.org/product/api) | 100 req/s (vs. 1 req/s without) |
-| **OpenAlex** | `OPENALEX_MAILTO` | Just your email | Polite pool: ~10x faster |
-| **OpenAlex** | `OPENALEX_API_KEY` | [Get free key](https://openalex.org/account) | Higher rate limit |
-| **Crossref** | `CROSSREF_MAILTO` | Just your email | Polite pool: ~10x faster |
+**Method 1: MCP client `env` field (recommended)**
 
-Set them in your environment:
+```json
+{
+  "mcpServers": {
+    "cite-mcp": {
+      "command": "npx",
+      "args": ["cite-mcp"],
+      "env": {
+        "S2_API_KEY": "your-key",
+        "OPENALEX_MAILTO": "your@email.com",
+        "OPENALEX_API_KEY": "your-openalex-key",
+        "CROSSREF_MAILTO": "your@email.com"
+      }
+    }
+  }
+}
+```
+
+**Method 2: Global `~/.cite-mcp.env` (one config for all projects)**
 
 ```bash
-# Option A: .env file (loaded automatically)
-echo "S2_API_KEY=your_key_here" >> .env
-echo "OPENALEX_MAILTO=your@email.com" >> .env
-echo "CROSSREF_MAILTO=your@email.com" >> .env
-
-# Option B: Export as environment variables
-export S2_API_KEY="your_key_here"
-export OPENALEX_MAILTO="your@email.com"
-export CROSSREF_MAILTO="your@email.com"
+cat > ~/.cite-mcp.env << 'EOF'
+S2_API_KEY=your-key
+OPENALEX_MAILTO=your@email.com
+CROSSREF_MAILTO=your@email.com
+EOF
 ```
+
+**Method 3: Project `.env` (current project only)**
+
+```bash
+cp .env.example .env
+# Edit .env with your keys
+```
+
+### Priority
+
+Higher-priority sources override lower-priority ones for the same variable. The **first source to provide a value** wins:
+
+1. MCP client `env` field (highest)
+2. `~/.cite-mcp.env` (global)
+3. `<project-dir>/.env` (project root)
+4. `cwd/.env` (working directory)
+
+### Environment Variables
+
+| Variable | Service | Rate Limit | How to Get |
+|----------|---------|-----------|-------------|
+| `S2_API_KEY` | Semantic Scholar | 100 req/s (1 req/s without) | [Request here](https://www.semanticscholar.org/product/api) |
+| `OPENALEX_MAILTO` | OpenAlex | Polite pool: ~10x faster | Any email |
+| `OPENALEX_API_KEY` | OpenAlex | Higher rate limit (required from 2025) | [Get free key](https://openalex.org/account) |
+| `CROSSREF_MAILTO` | Crossref | Polite pool: ~10x faster | Any email |
 
 ### How the `.env` File Works
 
-The server automatically loads `.env` from two locations (in order):
-1. The `mcp-server/` directory (inside the project)
-2. The current working directory
+The server automatically searches for `.env` files in order (each found file is loaded, only filling variables not yet set):
 
-Place your `.env` at either location. The file is already in `.gitignore`, so your keys won't be committed.
+1. `~/.cite-mcp.env` (global user config)
+2. `mcp-server/` directory (inside the project)
+3. Current working directory
+
+Place your `.env` at any of these locations. The file is already in `.gitignore`, so your keys won't be committed.
 
 ---
 
