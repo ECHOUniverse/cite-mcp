@@ -1,7 +1,7 @@
 {
   "name": "cite-mcp",
-  "version": "2.2.0",
-  "description": "MCP Server for academic paper search, detail, recommendations, and citation formatting",
+  "version": "2.3.0",
+  "description": "MCP Server for academic paper research — 6 tools across Semantic Scholar, OpenAlex, and Crossref. Paper search, detail, recommendations, analysis, citation formatting, and auto-citation with S2-first progressive search. API keys via MCP env, ~/.cite-mcp.env, or project .env.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {

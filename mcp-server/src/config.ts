@@ -1,11 +1,13 @@
 import { readFileSync, existsSync } from "fs"
 import { resolve, dirname } from "path"
 import { fileURLToPath } from "url"
+import { homedir } from "os"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 function loadEnv() {
   const candidates = [
+    resolve(homedir(), ".cite-mcp.env"),
     resolve(dirname(__dirname), ".env"),
     resolve(process.cwd(), ".env"),
   ]
@@ -23,7 +25,6 @@ function loadEnv() {
           process.env[key] = value
         }
       }
-      break
     }
   }
 }

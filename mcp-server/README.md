@@ -15,11 +15,19 @@ Configure your MCP client:
   "mcpServers": {
     "cite-mcp": {
       "command": "npx",
-      "args": ["cite-mcp"]
+      "args": ["cite-mcp"],
+      "env": {
+        "S2_API_KEY": "your-key-here",
+        "OPENALEX_MAILTO": "your-email@example.com",
+        "OPENALEX_API_KEY": "your-openalex-key",
+        "CROSSREF_MAILTO": "your-email@example.com"
+      }
     }
   }
 }
 ```
+
+> `env` is optional — the server works without any API keys.
 
 ## Tools
 
@@ -42,13 +50,63 @@ Configure your MCP client:
 
 ## Configuration
 
-API keys are optional — the server works out of the box with default rate limits.
+API keys are optional — the server works out of the box with default rate limits. For higher limits, configure keys via any of the following methods.
 
-| Variable | Purpose |
-|----------|---------|
-| `S2_API_KEY` | Semantic Scholar: 100 req/s vs 1 req/s |
-| `OPENALEX_MAILTO` | Your email for polite pool (higher rate limit) |
-| `CROSSREF_MAILTO` | Your email for polite pool (higher rate limit) |
+### Setup Methods (priority: high → low)
+
+**Method 1: MCP client `env` field (recommended)**
+
+```json
+{
+  "mcpServers": {
+    "cite-mcp": {
+      "command": "npx",
+      "args": ["cite-mcp"],
+      "env": {
+        "S2_API_KEY": "your-key",
+        "OPENALEX_MAILTO": "your-email@example.com",
+        "OPENALEX_API_KEY": "your-openalex-key",
+        "CROSSREF_MAILTO": "your-email@example.com"
+      }
+    }
+  }
+}
+```
+
+**Method 2: Global `.cite-mcp.env` (all projects)**
+
+```bash
+cat > ~/.cite-mcp.env << 'EOF'
+S2_API_KEY=your-key
+OPENALEX_MAILTO=your-email@example.com
+CROSSREF_MAILTO=your-email@example.com
+EOF
+```
+
+**Method 3: Project `.env` (current project only)**
+
+```bash
+cp .env.example .env
+# edit .env with your keys
+```
+
+### Priority
+
+Higher-priority sources override lower ones. Within the same variable, the **first** source that provides a value wins:
+
+1. MCP client `env` field (highest)
+2. `~/.cite-mcp.env` (global)
+3. `<project>/.env` (project root)
+4. `cwd/.env` (working directory)
+
+### Environment Variables
+
+| Variable | API | Rate Limit | How to Get |
+|----------|-----|------------|-------------|
+| `S2_API_KEY` | Semantic Scholar | 100 req/s → 1 req/s | https://api.semanticscholar.org/ |
+| `OPENALEX_MAILTO` | OpenAlex | Higher (polite pool) | — any email |
+| `OPENALEX_API_KEY` | OpenAlex | Required since 2025 | https://openalex.org/account (free) |
+| `CROSSREF_MAILTO` | Crossref | Higher (polite pool) | — any email |
 
 ## Links
 

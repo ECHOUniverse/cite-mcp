@@ -66,13 +66,19 @@ npx cite-mcp
   "mcpServers": {
     "cite-mcp": {
       "command": "npx",
-      "args": ["cite-mcp"]
+      "args": ["cite-mcp"],
+      "env": {
+        "S2_API_KEY": "你的密钥",
+        "OPENALEX_MAILTO": "你的邮箱@example.com",
+        "OPENALEX_API_KEY": "你的openalex密钥",
+        "CROSSREF_MAILTO": "你的邮箱@example.com"
+      }
     }
   }
 }
 ```
 
-> 💡 **API 密钥**: 如需更高调用频率，可设置环境变量 `S2_API_KEY`、`OPENALEX_MAILTO`、`CROSSREF_MAILTO`。详见 [配置说明](#-配置说明)。
+> 💡 `env` 字段为可选 — 不配置任何 API Key 也能正常使用。
 
 ### 方式二：全局安装
 
@@ -88,7 +94,12 @@ MCP 客户端配置：
   "mcpServers": {
     "cite-mcp": {
       "command": "cite-mcp",
-      "args": []
+      "args": [],
+      "env": {
+        "S2_API_KEY": "你的密钥",
+        "OPENALEX_MAILTO": "你的邮箱@example.com",
+        "CROSSREF_MAILTO": "你的邮箱@example.com"
+      }
     }
   }
 }
@@ -161,7 +172,12 @@ cp .env.example .env
   "mcpServers": {
     "cite-mcp": {
       "command": "npx",
-      "args": ["cite-mcp"]
+      "args": ["cite-mcp"],
+      "env": {
+        "S2_API_KEY": "你的密钥",
+        "OPENALEX_MAILTO": "你的邮箱@example.com",
+        "CROSSREF_MAILTO": "你的邮箱@example.com"
+      }
     }
   }
 }
@@ -173,7 +189,12 @@ cp .env.example .env
   "mcpServers": {
     "cite-mcp": {
       "command": "cite-mcp",
-      "args": []
+      "args": [],
+      "env": {
+        "S2_API_KEY": "你的密钥",
+        "OPENALEX_MAILTO": "你的邮箱@example.com",
+        "CROSSREF_MAILTO": "你的邮箱@example.com"
+      }
     }
   }
 }
@@ -196,7 +217,12 @@ cp .mcp.json.example .mcp.json
   "mcpServers": {
     "cite-mcp": {
       "command": "npx",
-      "args": ["cite-mcp"]
+      "args": ["cite-mcp"],
+      "env": {
+        "S2_API_KEY": "你的密钥",
+        "OPENALEX_MAILTO": "你的邮箱@example.com",
+        "CROSSREF_MAILTO": "你的邮箱@example.com"
+      }
     }
   }
 }
@@ -210,6 +236,7 @@ cp .mcp.json.example .mcp.json
 |------|-----|
 | 命令 (Command) | `npx` |
 | 参数 (Arguments) | `["cite-mcp"]` |
+| 环境变量 (env) | `S2_API_KEY`, `OPENALEX_MAILTO`, `CROSSREF_MAILTO`（均为可选） |
 </details>
 
 <details>
@@ -223,7 +250,12 @@ cp .mcp.json.example .mcp.json
     "mcpServers": {
       "cite-mcp": {
         "command": "npx",
-        "args": ["cite-mcp"]
+        "args": ["cite-mcp"],
+        "env": {
+          "S2_API_KEY": "你的密钥",
+          "OPENALEX_MAILTO": "你的邮箱@example.com",
+          "CROSSREF_MAILTO": "你的邮箱@example.com"
+        }
       }
     }
   }
@@ -244,36 +276,71 @@ cp .mcp.json.example .mcp.json
 
 ## 🔧 配置说明
 
-### API Keys
-
 API Keys **完全可选**。不配置也能正常使用，只是频率限制较低。
 
-| 服务 | 环境变量 | 获取方式 | 好处 |
-|------|---------|---------|------|
-| **Semantic Scholar** | `S2_API_KEY` | [申请地址](https://www.semanticscholar.org/product/api) | 100 请求/秒（无 Key 仅 1 请求/秒） |
-| **OpenAlex** | `OPENALEX_MAILTO` | 填写你的邮箱即可 | 礼貌池，约快 10 倍 |
-| **OpenAlex** | `OPENALEX_API_KEY` | [免费申请](https://openalex.org/account) | 更高频率限制 |
-| **Crossref** | `CROSSREF_MAILTO` | 填写你的邮箱即可 | 礼貌池，约快 10 倍 |
+### 配置方式（优先级从高到低）
 
-配置方式：
+**方式一：MCP 客户端 `env` 字段（推荐）**
+
+```json
+{
+  "mcpServers": {
+    "cite-mcp": {
+      "command": "npx",
+      "args": ["cite-mcp"],
+      "env": {
+        "S2_API_KEY": "你的密钥",
+        "OPENALEX_MAILTO": "你的邮箱@example.com",
+        "OPENALEX_API_KEY": "你的openalex密钥",
+        "CROSSREF_MAILTO": "你的邮箱@example.com"
+      }
+    }
+  }
+}
+```
+
+**方式二：全局 `.cite-mcp.env`（一次配置，所有项目生效）**
 
 ```bash
-# 方式 A：写入 .env 文件（服务器自动加载）
-echo "S2_API_KEY=你的密钥" >> .env
-echo "OPENALEX_MAILTO=你的@邮箱.com" >> .env
-echo "CROSSREF_MAILTO=你的@邮箱.com" >> .env
-
-# 方式 B：导出为环境变量
-export S2_API_KEY="你的密钥"
-export OPENALEX_MAILTO="你的@邮箱.com"
-export CROSSREF_MAILTO="你的@邮箱.com"
+cat > ~/.cite-mcp.env << 'EOF'
+S2_API_KEY=你的密钥
+OPENALEX_MAILTO=你的邮箱@example.com
+CROSSREF_MAILTO=你的邮箱@example.com
+EOF
 ```
+
+**方式三：项目 `.env`（仅当前项目）**
+
+```bash
+cp .env.example .env
+# 编辑 .env 填入你的密钥
+```
+
+### 优先级
+
+高优先级的来源会覆盖低优先级的同名字段。同一变量，**最先提供值**的来源生效：
+
+1. MCP 客户端 `env` 字段（最高）
+2. `~/.cite-mcp.env`（全局）
+3. `<项目目录>/.env`（项目根目录）
+4. `cwd/.env`（工作目录）
+
+### 环境变量一览
+
+| 变量 | 服务 | 频率限制 | 获取方式 |
+|------|------|---------|---------|
+| `S2_API_KEY` | Semantic Scholar | 100 请求/秒（无 Key 仅 1 请求/秒） | [申请地址](https://www.semanticscholar.org/product/api) |
+| `OPENALEX_MAILTO` | OpenAlex | 礼貌池，约快 10 倍 | — 任意邮箱 |
+| `OPENALEX_API_KEY` | OpenAlex | 更高频率限制（2025 年起必须） | [免费申请](https://openalex.org/account) |
+| `CROSSREF_MAILTO` | Crossref | 礼貌池，约快 10 倍 | — 任意邮箱 |
 
 ### `.env` 文件加载机制
 
-服务器会按以下顺序自动搜索 `.env` 文件：
-1. `mcp-server/` 目录（项目内部）
-2. 当前工作目录
+服务器会按以下顺序自动搜索 `.env` 文件（每个找到的文件都会加载，仅补充尚未设置的变量）：
+
+1. `~/.cite-mcp.env`（用户全局配置）
+2. `mcp-server/` 目录（项目内部）
+3. 当前工作目录
 
 将 `.env` 放在任一位置即可。该文件已在 `.gitignore` 中，不会误提交你的密钥。
 

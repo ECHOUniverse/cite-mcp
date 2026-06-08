@@ -62,3 +62,5 @@ opencode.jsonc
 
 # npm project-level config (may contain auth tokens)
 .npmrc
+
+AGENTS.md
