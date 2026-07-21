@@ -43,11 +43,14 @@
 | 功能 | 数据源 | 说明 |
 |------|--------|------|
 | 🔍 **多源搜索** | Semantic Scholar + OpenAlex + Crossref | 聚合搜索，自动去重 |
-| 📖 **论文详情** | 合并 3 个数据源 | 标题、作者、摘要、参考文献、引用数 |
+| 📖 **论文详情** | 合并 3 个数据源 | 标题、作者、摘要、参考文献、引用数 — 可选完整被引/参考文献列表 |
 | 🎯 **论文推荐** | Semantic Scholar | 基于已知论文发现相关文献 |
-| 📊 **文献分析** | Semantic Scholar + OpenAlex + Crossref | 横向对比概览表 + 每篇文献总结和数据表 |
-| 📝 **引文格式化** | — | APA 7th / MLA 9th / GB/T 7714-2015 / BibTeX / Elsevier 三段式报告 |
+| 📊 **文献分析** | Semantic Scholar + OpenAlex + Crossref | 横向对比概览表 + 每篇文献总结和数据表 + 领域趋势统计 |
+| 📝 **引文格式化** | — | APA 7th / MLA 9th / GB/T 7714-2015 / BibTeX / Elsevier 三段式报告 — 单篇可选 Crossref/S2 格式化来源 |
 | ✍️ **文本引文** | Semantic Scholar + OpenAlex + Crossref | 自动为文本插入引文，输出三段式报告（正文引用 → 参考文献 → 引文说明） |
+| 👤 **作者搜索** | Semantic Scholar + OpenAlex | 按姓名查找作者 — 所属机构、论文数、引用数、h 指数 |
+| 🏷️ **主题分类** | OpenAlex | 将关键词映射到主题层级（领域 / 学科 / 子学科） |
+| 💰 **资助方论文** | Crossref | 查找资助方及其资助的研究成果 |
 
 ---
 
@@ -159,6 +162,31 @@ cp .env.example .env
 项目根目录提供了配置文件模板（`.mcp.json.example`），各客户端配置方式如下：
 
 </details>
+
+### 方式四：HTTP 传输（Streamable HTTP）
+
+如果客户端通过 HTTP 而非 stdio 连接，可以使用包内置的无状态 HTTP 服务器：
+
+```bash
+# 全局安装后（源码构建则用 npm run start:http）
+cite-mcp-http
+```
+
+- 端点：`POST http://localhost:3000/mcp`
+- 端口：`PORT` 环境变量（默认 `3000`）
+- 无状态、无会话 —— 每个请求相互独立
+
+客户端配置：
+
+```json
+{
+  "mcpServers": {
+    "cite-mcp-http": {
+      "url": "http://localhost:3000/mcp"
+    }
+  }
+}
+```
 
 ### MCP 客户端配置
 
@@ -334,6 +362,8 @@ cp .env.example .env
 | `OPENALEX_API_KEY` | OpenAlex | 更高频率限制（2025 年起必须） | [免费申请](https://openalex.org/account) |
 | `CROSSREF_MAILTO` | Crossref | 礼貌池，约快 10 倍 | — 任意邮箱 |
 
+`PORT` 用于设置 HTTP 传输（`cite-mcp-http`）的端口（默认 `3000`），对 stdio 模式无影响。
+
 ### `.env` 文件加载机制
 
 服务器会按以下顺序自动搜索 `.env` 文件（每个找到的文件都会加载，仅补充尚未设置的变量）：
@@ -348,14 +378,15 @@ cp .env.example .env
 
 ## 🛠️ 工具列表
 
+所有工具均声明 `outputSchema`，并在 Markdown 文本之外附带 `structuredContent`，客户端可直接对结果做结构化解析。
+
 ### 搜索工具
 
 | 工具 | 推荐场景 | 数据源 | 数量限制 |
 |------|---------|--------|---------|
-| `paper_search` | **大多数用户的首选** | S2 → OA → CR（自动回退） | 默认 10 |
-| `search_semantic_scholar` | 计算机/AI/NLP 论文；高级查询语法 | 仅 S2 | 最大 100 |
-| `search_openalex` | 跨学科广泛搜索 | 仅 OA | 最大 50 |
-| `search_crossref` | 查找 DOI 元数据 | 仅 CR | 最大 50 |
+| `paper_search` | **大多数用户的首选** — 多源聚合搜索，自动去重；`authorId` 可按 OpenAlex 作者 ID 过滤论文（ID 可由 `author_search` 获得） | all / s2 / openalex / crossref | 默认 10（S2 最大 100，OA/CR 最大 50） |
+| `author_search` | 按姓名搜索作者 — 所属机构、论文数、引用数、h 指数 | s2 / openalex / all | 默认 10，最大 100 |
+| `paper_funder` | 查找资助方及其资助成果（`funderId` / `funderName` 二选一必填） | Crossref | 默认 20，最大 100 |
 
 **Semantic Scholar 高级查询语法：**
 
@@ -372,22 +403,21 @@ cp .env.example .env
 
 | 工具 | 说明 |
 |------|------|
-| `paper_analysis` | 搜索指定数量的文献，返回横向对比概览表 + 每篇文献的总结和数据性能表。适合快速文献综述。 |
+| `paper_analysis` | 搜索指定数量的文献，返回横向对比概览表 + 每篇文献的总结和数据性能表，末尾附领域趋势统计（年份趋势、文献类型分布、研究热点）。适合快速文献综述。 |
+| `topic_classify` | 将关键词映射到 OpenAlex 主题层级 — `level` 0 = 领域（默认）、1 = 学科、2 = 子学科。返回名称、作品数和 OpenAlex URL。 |
 
 ### 详情工具
 
 | 工具 | 输入 | 输出 |
 |------|------|------|
-| `paper_detail` | DOI | 合并 3 个数据源的详情 + 参考文献 |
-| `get_by_s2id` | S2 Paper ID | Semantic Scholar 详情 |
-| `get_by_s2ids_batch` | S2 Paper ID 数组 | 批量详情（最多 500 个） |
+| `paper_detail` | DOI / S2 Paper ID / 批量 ID（最多 500 个） | 合并 3 个数据源的详情 + 参考文献。`includeCitations` / `includeReferences` 可获取 Semantic Scholar 完整被引/参考文献列表（`relatedLimit`，默认 10，最大 100） |
 
 ### 推荐 & 引文工具
 
 | 工具 | 说明 |
 |------|------|
 | `paper_recommendations` | 通过 S2 推荐引擎发现相关论文 |
-| `citation` | 格式化：APA / MLA / GB/T 7714-2015 / BibTeX / Elsevier 三段式报告 |
+| `citation` | 格式化：APA / MLA / GB/T 7714-2015 / BibTeX / Elsevier 三段式报告。单篇模式支持 `source` 参数：`internal`（默认）/ `crossref`（内容协商，APA/MLA/BibTeX）/ `s2`（BibTeX）—— 不支持时回退内部格式化并附说明 |
 | `cite_text` | 文本自动引文：提取论点 → S2优先搜索 → 三段式报告（正文引用 + 参考文献 + 引文说明） |
 
 ---

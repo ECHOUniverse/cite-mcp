@@ -1,11 +1,12 @@
 {
   "name": "cite-mcp",
   "version": "2.3.0",
-  "description": "MCP Server for academic paper research — 6 tools across Semantic Scholar, OpenAlex, and Crossref. Paper search, detail, recommendations, analysis, citation formatting, and auto-citation with S2-first progressive search. API keys via MCP env, ~/.cite-mcp.env, or project .env.",
+  "description": "MCP Server for academic paper research — 9 tools across Semantic Scholar, OpenAlex, and Crossref. Paper search, detail, recommendations, analysis, citation formatting, auto-citation with S2-first progressive search, author search, topic classification, and funder works. API keys via MCP env, ~/.cite-mcp.env, or project .env.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "cite-mcp": "bin/cite-mcp.js"
+    "cite-mcp": "bin/cite-mcp.js",
+    "cite-mcp-http": "bin/cite-mcp-http.js"
   },
   "files": [
     "dist/",
@@ -32,6 +33,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
+    "start:http": "node dist/http-server.js",
     "dev": "tsc --watch",
     "test": "node --import tsx --test src/__tests__/*.test.ts",
     "prepublishOnly": "npm run build"

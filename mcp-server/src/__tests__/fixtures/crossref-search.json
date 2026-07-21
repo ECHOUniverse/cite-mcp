@@ -1,0 +1,134 @@
+{
+  "status": "ok",
+  "message-type": "work-list",
+  "message": {
+    "total-results": 2071144,
+    "items": [
+      {
+        "title": [
+          "Figure 3: Graph neural network."
+        ],
+        "created": {
+          "date-parts": [
+            [
+              2026,
+              1,
+              9
+            ]
+          ],
+          "date-time": "2026-01-09T08:00:28Z",
+          "timestamp": 1767945628000
+        },
+        "DOI": "10.7717/peerj-cs.3366/fig-3",
+        "URL": "https://doi.org/10.7717/peerj-cs.3366/fig-3",
+        "is-referenced-by-count": 0
+      },
+      {
+        "author": [
+          {
+            "ORCID": "https://orcid.org/0000-0003-3548-0262",
+            "authenticated-orcid": false,
+            "given": "Giuseppe",
+            "family": "Cerati",
+            "sequence": "first",
+            "affiliation": [
+              {
+                "name": "Fermilab"
+              }
+            ],
+            "role": [
+              {
+                "role": "author",
+                "vocabulary": "crossref"
+              }
+            ]
+          }
+        ],
+        "title": [
+          "NuGraph2: A Graph Neural Network for Neutrino Event Reconstruction"
+        ],
+        "container-title": [
+          "NuGraph2: A Graph Neural Network for Neutrino Event Reconstruction"
+        ],
+        "published": {
+          "date-parts": [
+            [
+              2024,
+              8,
+              9
+            ]
+          ]
+        },
+        "created": {
+          "date-parts": [
+            [
+              2024,
+              8,
+              23
+            ]
+          ],
+          "date-time": "2024-08-23T03:10:37Z",
+          "timestamp": 1724382637000
+        },
+        "DOI": "10.2172/2432449",
+        "URL": "https://doi.org/10.2172/2432449",
+        "is-referenced-by-count": 0
+      },
+      {
+        "author": [
+          {
+            "given": "Benyamin",
+            "family": "Ghojogh",
+            "sequence": "first",
+            "affiliation": [],
+            "role": [
+              {
+                "role": "author",
+                "vocabulary": "crossref"
+              }
+            ]
+          },
+          {
+            "given": "Ali",
+            "family": "Ghodsi",
+            "sequence": "additional",
+            "affiliation": [],
+            "role": [
+              {
+                "role": "author",
+                "vocabulary": "crossref"
+              }
+            ]
+          }
+        ],
+        "title": [
+          "Graph Neural Network, ChebNet, Graph Convolutional Network, and Graph Autoencoder: Tutorial and Survey"
+        ],
+        "published": {
+          "date-parts": [
+            [
+              2024,
+              7,
+              9
+            ]
+          ]
+        },
+        "created": {
+          "date-parts": [
+            [
+              2024,
+              7,
+              9
+            ]
+          ],
+          "date-time": "2024-07-09T17:41:03Z",
+          "timestamp": 1720546863000
+        },
+        "abstract": "<p>This is a tutorial paper on graph neural networks including ChebNet, graph convolutional network, graph attention network, and graph autoencoder. It starts with Laplacian of graph, graph Fourier transform, and graph convolution. Then, it is explained how Chebyshev polynomials are used in graph networks to have ChebNet. Afterwards, graph convolutional network and its general framework are introduced. Then, graph attention network is explained as a combination of attention mechanism and graph neural networks. Finally, graph reconstruction autoencoder and graph variational autoencoder are introduced.</p>",
+        "DOI": "10.31219/osf.io/9wk3y",
+        "URL": "https://doi.org/10.31219/osf.io/9wk3y",
+        "is-referenced-by-count": 0
+      }
+    ]
+  }
+}

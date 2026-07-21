@@ -1,0 +1,1149 @@
+{
+  "meta": {
+    "count": 813007,
+    "db_response_time_ms": 266,
+    "page": 1,
+    "per_page": 3,
+    "groups_count": null,
+    "x_query": {
+      "oql": "works where full text has (graph neural network)",
+      "oqo": {
+        "get_rows": "works",
+        "filter_rows": [
+          {
+            "column_id": "fulltext.search",
+            "value": "graph neural network",
+            "operator": "has"
+          }
+        ],
+        "select": [
+          "id",
+          "title",
+          "authorships",
+          "publication_year",
+          "doi",
+          "abstract_inverted_index",
+          "cited_by_count",
+          "primary_location"
+        ],
+        "per_page": 3
+      },
+      "url": "/works?filter=fulltext.search:graph neural network&select=id,title,authorships,publication_year,doi,abstract_inverted_index,cited_by_count,primary_location&per_page=3"
+    },
+    "cost_usd": 0.001
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W2116341502",
+      "title": "The Graph Neural Network Model",
+      "authorships": [
+        {
+          "author_position": "first",
+          "author": {
+            "id": "https://openalex.org/A5020560480",
+            "display_name": "Franco Scarselli",
+            "orcid": "https://orcid.org/0000-0003-1307-0772"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I102064193",
+              "display_name": "University of Siena",
+              "ror": "https://ror.org/01tevnk56",
+              "country_code": "IT",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I102064193"
+              ]
+            }
+          ],
+          "countries": [
+            "IT"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "F. Scarselli",
+          "raw_affiliation_strings": [
+            "Faculty of Information Engineering, University of Siena, Siena 53100, Italy. franco@dii.unisi.it",
+            "Fac. of Inf. Eng., Univ. of Siena, Siena"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Faculty of Information Engineering, University of Siena, Siena 53100, Italy. franco@dii.unisi.it",
+              "institution_ids": [
+                "https://openalex.org/I102064193"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Fac. of Inf. Eng., Univ. of Siena, Siena",
+              "institution_ids": [
+                "https://openalex.org/I102064193"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5083641000",
+            "display_name": "M. Gori",
+            "orcid": null
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I102064193",
+              "display_name": "University of Siena",
+              "ror": "https://ror.org/01tevnk56",
+              "country_code": "IT",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I102064193"
+              ]
+            }
+          ],
+          "countries": [
+            "IT"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "M. Gori",
+          "raw_affiliation_strings": [
+            "Faculty of Information Engineering, University of Sienna, Siena, Italy",
+            "Fac. of Inf. Eng., Univ. of Siena, Siena"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Faculty of Information Engineering, University of Sienna, Siena, Italy",
+              "institution_ids": [
+                "https://openalex.org/I102064193"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Fac. of Inf. Eng., Univ. of Siena, Siena",
+              "institution_ids": [
+                "https://openalex.org/I102064193"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5077581403",
+            "display_name": "Ah Chung Tsoi",
+            "orcid": "https://orcid.org/0000-0003-2904-7008"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I141568987",
+              "display_name": "Hong Kong Baptist University",
+              "ror": "https://ror.org/0145fw131",
+              "country_code": "HK",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I141568987"
+              ]
+            }
+          ],
+          "countries": [
+            "HK"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Ah Chung Tsoi",
+          "raw_affiliation_strings": [
+            "Hong Kong Baptist University, Hong Kong, China",
+            "[Hong Kong Baptist Univ., Hong Kong]"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Hong Kong Baptist University, Hong Kong, China",
+              "institution_ids": [
+                "https://openalex.org/I141568987"
+              ]
+            },
+            {
+              "raw_affiliation_string": "[Hong Kong Baptist Univ., Hong Kong]",
+              "institution_ids": [
+                "https://openalex.org/I141568987"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5069570795",
+            "display_name": "Markus Hagenbuchner",
+            "orcid": "https://orcid.org/0000-0002-4884-753X"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I204824540",
+              "display_name": "University of Wollongong",
+              "ror": "https://ror.org/00jtmb277",
+              "country_code": "AU",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I204824540"
+              ]
+            }
+          ],
+          "countries": [
+            "AU"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "M. Hagenbuchner",
+          "raw_affiliation_strings": [
+            "University of Wollongong, Wollongong, NSW, Australia",
+            "University of Wollongong, Wollongong NSW"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "University of Wollongong, Wollongong, NSW, Australia",
+              "institution_ids": [
+                "https://openalex.org/I204824540"
+              ]
+            },
+            {
+              "raw_affiliation_string": "University of Wollongong, Wollongong NSW",
+              "institution_ids": [
+                "https://openalex.org/I204824540"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "last",
+          "author": {
+            "id": "https://openalex.org/A5039902490",
+            "display_name": "Gabriele Monfardini",
+            "orcid": null
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I102064193",
+              "display_name": "University of Siena",
+              "ror": "https://ror.org/01tevnk56",
+              "country_code": "IT",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I102064193"
+              ]
+            }
+          ],
+          "countries": [
+            "IT"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "G. Monfardini",
+          "raw_affiliation_strings": [
+            "Faculty of Information Engineering, University of Sienna, Siena, Italy",
+            "Fac. of Inf. Eng., Univ. of Siena, Siena"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Faculty of Information Engineering, University of Sienna, Siena, Italy",
+              "institution_ids": [
+                "https://openalex.org/I102064193"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Fac. of Inf. Eng., Univ. of Siena, Siena",
+              "institution_ids": [
+                "https://openalex.org/I102064193"
+              ]
+            }
+          ]
+        }
+      ],
+      "publication_year": 2008,
+      "doi": "https://doi.org/10.1109/tnn.2008.2005605",
+      "abstract_inverted_index": {
+        "Many": [
+          0
+        ],
+        "underlying": [
+          1
+        ],
+        "relationships": [
+          2
+        ],
+        "among": [
+          3
+        ],
+        "data": [
+          4,
+          22,
+          56
+        ],
+        "in": [
+          5,
+          27,
+          58
+        ],
+        "several": [
+          6
+        ],
+        "areas": [
+          7
+        ],
+        "of": [
+          8,
+          29,
+          69,
+          74,
+          89,
+          98,
+          117,
+          125
+        ],
+        "science": [
+          9
+        ],
+        "and": [
+          10,
+          21,
+          80,
+          96,
+          143
+        ],
+        "engineering,": [
+          11
+        ],
+        "e.g.,": [
+          12,
+          76
+        ],
+        "computer": [
+          13
+        ],
+        "vision,": [
+          14
+        ],
+        "molecular": [
+          15,
+          17
+        ],
+        "chemistry,": [
+          16
+        ],
+        "biology,": [
+          18
+        ],
+        "pattern": [
+          19
+        ],
+        "recognition,": [
+          20
+        ],
+        "mining,": [
+          23
+        ],
+        "can": [
+          24,
+          65
+        ],
+        "be": [
+          25
+        ],
+        "represented": [
+          26,
+          57
+        ],
+        "terms": [
+          28
+        ],
+        "graphs.": [
+          30
+        ],
+        "In": [
+          31
+        ],
+        "this": [
+          32
+        ],
+        "paper,": [
+          33
+        ],
+        "we": [
+          34
+        ],
+        "propose": [
+          35
+        ],
+        "a": [
+          36,
+          83,
+          93
+        ],
+        "new": [
+          37
+        ],
+        "neural": [
+          38,
+          43,
+          50
+        ],
+        "network": [
+          39,
+          44,
+          51
+        ],
+        "model,": [
+          40,
+          46,
+          63
+        ],
+        "called": [
+          41
+        ],
+        "graph": [
+          42,
+          59,
+          94
+        ],
+        "(GNN)": [
+          45
+        ],
+        "that": [
+          47,
+          91
+        ],
+        "extends": [
+          48
+        ],
+        "existing": [
+          49
+        ],
+        "methods": [
+          52
+        ],
+        "for": [
+          53
+        ],
+        "processing": [
+          54
+        ],
+        "the": [
+          55,
+          70,
+          115,
+          118,
+          126,
+          139
+        ],
+        "domains.": [
+          60
+        ],
+        "This": [
+          61
+        ],
+        "GNN": [
+          62,
+          120
+        ],
+        "which": [
+          64
+        ],
+        "directly": [
+          66
+        ],
+        "process": [
+          67
+        ],
+        "most": [
+          68
+        ],
+        "practically": [
+          71
+        ],
+        "useful": [
+          72
+        ],
+        "types": [
+          73
+        ],
+        "graphs,": [
+          75
+        ],
+        "acyclic,": [
+          77
+        ],
+        "cyclic,": [
+          78
+        ],
+        "directed,": [
+          79
+        ],
+        "undirected,": [
+          81
+        ],
+        "implements": [
+          82
+        ],
+        "function": [
+          84
+        ],
+        "tau(G,n)": [
+          85
+        ],
+        "is": [
+          86,
+          111,
+          129
+        ],
+        "an": [
+          87,
+          103
+        ],
+        "element": [
+          88
+        ],
+        "IR(m)": [
+          90
+        ],
+        "maps": [
+          92
+        ],
+        "G": [
+          95
+        ],
+        "one": [
+          97
+        ],
+        "its": [
+          99,
+          146
+        ],
+        "nodes": [
+          100
+        ],
+        "n": [
+          101
+        ],
+        "into": [
+          102
+        ],
+        "m-dimensional": [
+          104
+        ],
+        "Euclidean": [
+          105
+        ],
+        "space.": [
+          106
+        ],
+        "A": [
+          107
+        ],
+        "supervised": [
+          108
+        ],
+        "learning": [
+          109,
+          141
+        ],
+        "algorithm": [
+          110,
+          128
+        ],
+        "derived": [
+          112
+        ],
+        "to": [
+          113,
+          137,
+          144
+        ],
+        "estimate": [
+          114
+        ],
+        "parameters": [
+          116
+        ],
+        "proposed": [
+          119,
+          127,
+          140
+        ],
+        "model.": [
+          121
+        ],
+        "The": [
+          122
+        ],
+        "computational": [
+          123
+        ],
+        "cost": [
+          124
+        ],
+        "also": [
+          130
+        ],
+        "considered.": [
+          131
+        ],
+        "Some": [
+          132
+        ],
+        "experimental": [
+          133
+        ],
+        "results": [
+          134
+        ],
+        "are": [
+          135
+        ],
+        "shown": [
+          136
+        ],
+        "validate": [
+          138
+        ],
+        "algorithm,": [
+          142
+        ],
+        "demonstrate": [
+          145
+        ],
+        "generalization": [
+          147
+        ],
+        "capabilities.": [
+          148
+        ]
+      },
+      "cited_by_count": 9435,
+      "primary_location": {
+        "id": "doi:10.1109/tnn.2008.2005605",
+        "is_oa": false,
+        "landing_page_url": "https://doi.org/10.1109/tnn.2008.2005605",
+        "pdf_url": null,
+        "source": {
+          "id": "https://openalex.org/S42080949",
+          "display_name": "IEEE Transactions on Neural Networks",
+          "issn_l": "1045-9227",
+          "issn": [
+            "1045-9227",
+            "1941-0093"
+          ],
+          "is_oa": false,
+          "is_in_doaj": false,
+          "is_core": true,
+          "host_organization": "https://openalex.org/P4310319808",
+          "host_organization_name": "Institute of Electrical and Electronics Engineers",
+          "host_organization_lineage": [
+            "https://openalex.org/P4310319808"
+          ],
+          "host_organization_lineage_names": [
+            "Institute of Electrical and Electronics Engineers"
+          ],
+          "type": "journal"
+        },
+        "license": null,
+        "license_id": null,
+        "version": "publishedVersion",
+        "is_accepted": true,
+        "is_published": true,
+        "raw_source_name": "IEEE Transactions on Neural Networks",
+        "raw_type": "journal-article"
+      }
+    },
+    {
+      "id": "https://openalex.org/W4297733535",
+      "title": "Graph Attention Networks",
+      "authorships": [
+        {
+          "author_position": "first",
+          "author": {
+            "id": null,
+            "display_name": "Veli\\v{c}kovi\\'c, Petar",
+            "orcid": null
+          },
+          "institutions": [],
+          "countries": [],
+          "is_corresponding": false,
+          "raw_author_name": "Veli\\v{c}kovi\\'c, Petar",
+          "raw_affiliation_strings": [],
+          "raw_orcid": null,
+          "affiliations": []
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5069420168",
+            "display_name": "Guillem Cucurull",
+            "orcid": null
+          },
+          "institutions": [],
+          "countries": [],
+          "is_corresponding": false,
+          "raw_author_name": "Cucurull, Guillem",
+          "raw_affiliation_strings": [],
+          "raw_orcid": null,
+          "affiliations": []
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5064868620",
+            "display_name": "Arantxa Casanova",
+            "orcid": null
+          },
+          "institutions": [],
+          "countries": [],
+          "is_corresponding": false,
+          "raw_author_name": "Casanova, Arantxa",
+          "raw_affiliation_strings": [],
+          "raw_orcid": null,
+          "affiliations": []
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5080039924",
+            "display_name": "Adriana Romero",
+            "orcid": "https://orcid.org/0000-0003-3604-6281"
+          },
+          "institutions": [],
+          "countries": [],
+          "is_corresponding": false,
+          "raw_author_name": "Romero, Adriana",
+          "raw_affiliation_strings": [],
+          "raw_orcid": null,
+          "affiliations": []
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": null,
+            "display_name": "Li\\`o, Pietro",
+            "orcid": null
+          },
+          "institutions": [],
+          "countries": [],
+          "is_corresponding": false,
+          "raw_author_name": "Li\\`o, Pietro",
+          "raw_affiliation_strings": [],
+          "raw_orcid": null,
+          "affiliations": []
+        },
+        {
+          "author_position": "last",
+          "author": {
+            "id": "https://openalex.org/A5086198262",
+            "display_name": "Yoshua Bengio",
+            "orcid": "https://orcid.org/0000-0002-9322-3515"
+          },
+          "institutions": [],
+          "countries": [],
+          "is_corresponding": false,
+          "raw_author_name": "Bengio, Yoshua",
+          "raw_affiliation_strings": [],
+          "raw_orcid": null,
+          "affiliations": []
+        }
+      ],
+      "publication_year": 2017,
+      "doi": null,
+      "abstract_inverted_index": {
+        "We": [
+          0
+        ],
+        "present": [
+          1
+        ],
+        "graph": [
+          2,
+          28,
+          75,
+          88,
+          120
+        ],
+        "attention": [
+          3
+        ],
+        "networks": [
+          4,
+          90
+        ],
+        "(GATs),": [
+          5
+        ],
+        "novel": [
+          6
+        ],
+        "neural": [
+          7,
+          89
+        ],
+        "network": [
+          8,
+          128
+        ],
+        "architectures": [
+          9
+        ],
+        "that": [
+          10
+        ],
+        "operate": [
+          11
+        ],
+        "on": [
+          12,
+          27,
+          72
+        ],
+        "graph-structured": [
+          13
+        ],
+        "data,": [
+          14
+        ],
+        "leveraging": [
+          15
+        ],
+        "masked": [
+          16
+        ],
+        "self-attentional": [
+          17
+        ],
+        "layers": [
+          18,
+          35
+        ],
+        "to": [
+          19,
+          41,
+          53,
+          98
+        ],
+        "address": [
+          20,
+          82
+        ],
+        "the": [
+          21,
+          74,
+          122
+        ],
+        "shortcomings": [
+          22
+        ],
+        "of": [
+          23,
+          63,
+          86
+        ],
+        "prior": [
+          24
+        ],
+        "methods": [
+          25
+        ],
+        "based": [
+          26
+        ],
+        "convolutions": [
+          29
+        ],
+        "or": [
+          30,
+          70,
+          110
+        ],
+        "their": [
+          31,
+          44
+        ],
+        "approximations.": [
+          32
+        ],
+        "By": [
+          33
+        ],
+        "stacking": [
+          34
+        ],
+        "in": [
+          36,
+          56
+        ],
+        "which": [
+          37
+        ],
+        "nodes": [
+          38,
+          55
+        ],
+        "are": [
+          39
+        ],
+        "able": [
+          40
+        ],
+        "attend": [
+          42
+        ],
+        "over": [
+          43
+        ],
+        "neighborhoods'": [
+          45
+        ],
+        "features,": [
+          46
+        ],
+        "we": [
+          47,
+          81
+        ],
+        "enable": [
+          48
+        ],
+        "(implicitly)": [
+          49
+        ],
+        "specifying": [
+          50
+        ],
+        "different": [
+          51,
+          54
+        ],
+        "weights": [
+          52
+        ],
+        "a": [
+          57,
+          133
+        ],
+        "neighborhood,": [
+          58
+        ],
+        "without": [
+          59
+        ],
+        "requiring": [
+          60
+        ],
+        "any": [
+          61
+        ],
+        "kind": [
+          62
+        ],
+        "costly": [
+          64
+        ],
+        "matrix": [
+          65
+        ],
+        "operation": [
+          66
+        ],
+        "(such": [
+          67
+        ],
+        "as": [
+          68,
+          100,
+          102,
+          130,
+          132
+        ],
+        "inversion)": [
+          69
+        ],
+        "depending": [
+          71
+        ],
+        "knowing": [
+          73
+        ],
+        "structure": [
+          76
+        ],
+        "upfront.": [
+          77
+        ],
+        "In": [
+          78
+        ],
+        "this": [
+          79
+        ],
+        "way,": [
+          80
+        ],
+        "several": [
+          83
+        ],
+        "key": [
+          84
+        ],
+        "challenges": [
+          85
+        ],
+        "spectral-based": [
+          87
+        ],
+        "simultaneously,": [
+          91
+        ],
+        "and": [
+          92,
+          118,
+          125
+        ],
+        "make": [
+          93
+        ],
+        "our": [
+          94
+        ],
+        "model": [
+          95
+        ],
+        "readily": [
+          96
+        ],
+        "applicable": [
+          97
+        ],
+        "inductive": [
+          99,
+          119
+        ],
+        "well": [
+          101,
+          131
+        ],
+        "transductive": [
+          103,
+          117
+        ],
+        "problems.": [
+          104
+        ],
+        "Our": [
+          105
+        ],
+        "GAT": [
+          106
+        ],
+        "models": [
+          107
+        ],
+        "have": [
+          108
+        ],
+        "achieved": [
+          109
+        ],
+        "matched": [
+          111
+        ],
+        "state-of-the-art": [
+          112
+        ],
+        "results": [
+          113
+        ],
+        "across": [
+          114
+        ],
+        "four": [
+          115
+        ],
+        "established": [
+          116
+        ],
+        "benchmarks:": [
+          121
+        ],
+        "Cora,": [
+          123
+        ],
+        "Citeseer": [
+          124
+        ],
+        "Pubmed": [
+          126
+        ],
+        "citation": [
+          127
+        ],
+        "datasets,": [
+          129
+        ],
+        "protein-protein": [
+          134
+        ],
+        "interaction": [
+          135
+        ],
+        "dataset": [
+          136
+        ],
+        "(wherein": [
+          137
+        ],
+        "test": [
+          138
+        ],
+        "graphs": [
+          139
+        ],
+        "remain": [
+          140
+        ],
+        "unseen": [
+          141
+        ],
+        "during": [
+          142
+        ],
+        "training).": [
+          143
+        ]
+      },
+      "cited_by_count": 8367,
+      "primary_location": {
+        "id": "pmh:oai:arXiv.org:1710.10903",
+        "is_oa": true,
+        "landing_page_url": "http://arxiv.org/abs/1710.10903",
+        "pdf_url": "https://arxiv.org/pdf/1710.10903",
+        "source": {
+          "id": "https://openalex.org/S4306400194",
+          "display_name": "arXiv (Cornell University)",
+          "issn_l": null,
+          "issn": null,
+          "is_oa": true,
+          "is_in_doaj": false,
+          "is_core": false,
+          "host_organization": "https://openalex.org/I205783295",
+          "host_organization_name": "Cornell University",
+          "host_organization_lineage": [
+            "https://openalex.org/I205783295"
+          ],
+          "host_organization_lineage_names": [],
+          "type": "repository"
+        },
+        "license": null,
+        "license_id": null,
+        "version": "submittedVersion",
+        "is_accepted": false,
+        "is_published": false,
+        "raw_source_name": null,
+        "raw_type": "text"
+      }
+    }
+  ]
+}

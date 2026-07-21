@@ -1,6 +1,6 @@
 # cite-mcp
 
-**MCP Server for academic paper research** — search across Semantic Scholar, OpenAlex, and Crossref, get paper details, discover related works, format citations, and auto-insert references into text.
+**MCP Server for academic paper research** — search across Semantic Scholar, OpenAlex, and Crossref, get paper details, discover related works, format citations, auto-insert references into text, and look up authors, topics, and funders.
 
 ## Quick Start
 
@@ -29,16 +29,39 @@ Configure your MCP client:
 
 > `env` is optional — the server works without any API keys.
 
+## HTTP Transport
+
+A stateless Streamable HTTP server ships alongside the default stdio server:
+
+```bash
+cite-mcp-http          # after global install (from source: npm run start:http)
+```
+
+It listens on `POST http://localhost:3000/mcp` (set `PORT` to change the port, default `3000`). Client config:
+
+```json
+{
+  "mcpServers": {
+    "cite-mcp-http": {
+      "url": "http://localhost:3000/mcp"
+    }
+  }
+}
+```
+
 ## Tools
 
 | Tool | Description |
 |------|-------------|
-| `paper_search` | Multi-source search (all/s2/openalex/crossref, auto-dedup) |
-| `paper_detail` | Full paper details by DOI, S2 Paper ID, or batch IDs |
+| `paper_search` | Multi-source search (all/s2/openalex/crossref, auto-dedup); `authorId` filters by OpenAlex author ID |
+| `paper_detail` | Full paper details by DOI, S2 Paper ID, or batch IDs — optional full citation/reference lists (`includeCitations` / `includeReferences`) |
 | `paper_recommendations` | Related paper discovery from a seed paper |
-| `citation` | Citation formatting — single paper (APA/MLA/GB7714/BibTeX/Elsevier) or multi-paper report |
-| `paper_analysis` | Cross-paper comparison + per-paper summaries for literature review |
+| `citation` | Citation formatting — single paper (APA/MLA/GB7714/BibTeX/Elsevier, optional `source`: internal/crossref/s2) or multi-paper report |
+| `paper_analysis` | Cross-paper comparison + per-paper summaries + field-trend statistics for literature review |
 | `cite_text` | Auto-find supporting papers for claims in a text paragraph, outputs citation report |
+| `author_search` | Author lookup by name — affiliations, paper/citation counts, h-index (S2 + OpenAlex) |
+| `topic_classify` | Classify a keyword into the OpenAlex topic hierarchy (domain / field / subfield) |
+| `paper_funder` | Find a funder and its funded works via Crossref (`funderId` or `funderName`) |
 
 ## Prompts
 

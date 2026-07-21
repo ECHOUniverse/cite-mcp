@@ -1,0 +1,130 @@
+{
+  "total": 1594239,
+  "offset": 0,
+  "next": 3,
+  "data": [
+    {
+      "paperId": "3efd851140aa28e95221b55fcc5659eea97b172d",
+      "externalIds": {
+        "DBLP": "journals/tnn/ScarselliGTHM09",
+        "MAG": "2116341502",
+        "DOI": "10.1109/TNN.2008.2005605",
+        "CorpusId": 206756462,
+        "PubMed": "19068426"
+      },
+      "url": "https://www.semanticscholar.org/paper/3efd851140aa28e95221b55fcc5659eea97b172d",
+      "title": "The Graph Neural Network Model",
+      "venue": "IEEE Transactions on Neural Networks",
+      "year": 2009,
+      "citationCount": 9596,
+      "openAccessPdf": {
+        "url": "https://figshare.com/articles/journal_contribution/The_graph_neural_network_model/27757629",
+        "status": "GREEN",
+        "license": "CCBY",
+        "disclaimer": "Notice: Paper or abstract available at https://api.unpaywall.org/v2/10.1109/TNN.2008.2005605?email=<INSERT_YOUR_EMAIL> or https://doi.org/10.1109/TNN.2008.2005605, which is subject to the license by the author or copyright owner provided with this content. Please go to the source to verify the license and copyright information for your use."
+      },
+      "tldr": {
+        "model": "tldr@v2.0.0",
+        "text": "A new neural network model, called graph neural network (GNN) model, that extends existing neural network methods for processing the data represented in graph domains, and implements a function tau(G,n) isin IRm that maps a graph G and one of its nodes n into an m-dimensional Euclidean space."
+      },
+      "authors": [
+        {
+          "authorId": "47260481",
+          "name": "F. Scarselli"
+        },
+        {
+          "authorId": "145467467",
+          "name": "M. Gori"
+        },
+        {
+          "authorId": "1733691",
+          "name": "A. Tsoi"
+        },
+        {
+          "authorId": "1784450",
+          "name": "M. Hagenbuchner"
+        },
+        {
+          "authorId": "3073217",
+          "name": "G. Monfardini"
+        }
+      ],
+      "abstract": "Many underlying relationships among data in several areas of science and engineering, e.g., computer vision, molecular chemistry, molecular biology, pattern recognition, and data mining, can be represented in terms of graphs. In this paper, we propose a new neural network model, called graph neural network (GNN) model, that extends existing neural network methods for processing the data represented in graph domains. This GNN model, which can directly process most of the practically useful types of graphs, e.g., acyclic, cyclic, directed, and undirected, implements a function tau(G,n) isin IRm that maps a graph G and one of its nodes n into an m-dimensional Euclidean space. A supervised learning algorithm is derived to estimate the parameters of the proposed GNN model. The computational cost of the proposed algorithm is also considered. Some experimental results are shown to validate the proposed learning algorithm, and to demonstrate its generalization capabilities."
+    },
+    {
+      "paperId": "21d2742e38f7167354dafcf7f565d3894b31d008",
+      "externalIds": {
+        "DBLP": "conf/aaai/DengH21",
+        "ArXiv": "2106.06947",
+        "DOI": "10.1609/aaai.v35i5.16523",
+        "CorpusId": 231646473
+      },
+      "url": "https://www.semanticscholar.org/paper/21d2742e38f7167354dafcf7f565d3894b31d008",
+      "title": "Graph Neural Network-Based Anomaly Detection in Multivariate Time Series",
+      "venue": "AAAI Conference on Artificial Intelligence",
+      "year": 2021,
+      "citationCount": 1434,
+      "openAccessPdf": {
+        "url": "https://doi.org/10.1609/aaai.v35i5.16523",
+        "status": "GOLD",
+        "license": null,
+        "disclaimer": "Notice: Paper or abstract available at https://arxiv.org/abs/2106.06947, which is subject to the license by the author or copyright owner provided with this content. Please go to the source to verify the license and copyright information for your use."
+      },
+      "tldr": {
+        "model": "tldr@v2.0.0",
+        "text": "This approach combines a structure learning approach with graph neural networks, additionally using attention weights to provide explainability for the detected anomalies."
+      },
+      "authors": [
+        {
+          "authorId": "2063950812",
+          "name": "Ailin Deng"
+        },
+        {
+          "authorId": "2319222667",
+          "name": "Bryan Hooi"
+        }
+      ],
+      "abstract": "Given high-dimensional time series data (e.g., sensor data), how can we detect anomalous events, such as system faults and attacks? More challengingly, how can we do this in a way that captures complex inter-sensor relationships, and detects and explains anomalies which deviate from these relationships? Recently, deep learning approaches have enabled improvements in anomaly detection in high-dimensional datasets; however, existing methods do not explicitly learn the structure of existing relationships between variables, or use them to predict the expected behavior of time series. Our approach combines a structure learning approach with graph neural networks, additionally using attention weights to provide explainability for the detected anomalies. Experiments on two real-world sensor datasets with ground truth anomalies show that our method detects anomalies more accurately than baseline approaches, accurately captures correlations between sensors, and allows users to deduce the root cause of a detected anomaly."
+    },
+    {
+      "paperId": "72edcb3788f9c141a3ed28e6d36f75ca4977d27e",
+      "externalIds": {
+        "MAG": "2756203131",
+        "ArXiv": "1709.04875",
+        "DBLP": "conf/ijcai/YuYZ18",
+        "DOI": "10.24963/ijcai.2018/505",
+        "CorpusId": 4972291
+      },
+      "url": "https://www.semanticscholar.org/paper/72edcb3788f9c141a3ed28e6d36f75ca4977d27e",
+      "title": "Spatio-temporal Graph Convolutional Neural Network: A Deep Learning Framework for Traffic Forecasting",
+      "venue": "International Joint Conference on Artificial Intelligence",
+      "year": 2017,
+      "citationCount": 5169,
+      "openAccessPdf": {
+        "url": "https://www.ijcai.org/proceedings/2018/0505.pdf",
+        "status": "GOLD",
+        "license": null,
+        "disclaimer": "Notice: Paper or abstract available at https://arxiv.org/abs/1709.04875, which is subject to the license by the author or copyright owner provided with this content. Please go to the source to verify the license and copyright information for your use."
+      },
+      "tldr": {
+        "model": "tldr@v2.0.0",
+        "text": "This paper proposes a novel deep learning framework, Spatio-Temporal Graph Convolutional Networks (STGCN), to tackle the time series prediction problem in traffic domain, and builds the model with complete convolutional structures, which enable much faster training speed with fewer parameters."
+      },
+      "authors": [
+        {
+          "authorId": "46806278",
+          "name": "Ting Yu"
+        },
+        {
+          "authorId": "26379330",
+          "name": "Haoteng Yin"
+        },
+        {
+          "authorId": "1703952",
+          "name": "Zhanxing Zhu"
+        }
+      ],
+      "abstract": "Timely accurate traffic forecast is crucial for urban traffic control and guidance. Due to the high nonlinearity and complexity of traffic flow, traditional methods cannot satisfy the requirements of mid-and-long term prediction tasks and often neglect spatial and temporal dependencies. In this paper, we propose a novel deep learning framework, Spatio-Temporal Graph Convolutional Networks (STGCN), to tackle the time series prediction problem in traffic domain. Instead of applying regular convolutional and recurrent units, we formulate the problem on graphs and build the model with complete convolutional structures, which enable much faster training speed with fewer parameters. Experiments show that our model STGCN effectively captures comprehensive spatio-temporal correlations through modeling multi-scale traffic networks and consistently outperforms state-of-the-art baselines on various real-world traffic datasets."
+    }
+  ]
+}

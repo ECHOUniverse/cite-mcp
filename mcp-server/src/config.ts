@@ -5,6 +5,17 @@ import { homedir } from "os"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
+export function parseEnvValue(value: string): string {
+  if (value.length >= 2) {
+    const first = value[0]
+    const last = value[value.length - 1]
+    if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
+      return value.slice(1, -1)
+    }
+  }
+  return value
+}
+
 function loadEnv() {
   const candidates = [
     resolve(homedir(), ".cite-mcp.env"),
@@ -20,7 +31,7 @@ function loadEnv() {
         const idx = line.indexOf("=")
         if (idx === -1) continue
         const key = line.slice(0, idx).trim()
-        const value = line.slice(idx + 1).trim()
+        const value = parseEnvValue(line.slice(idx + 1).trim())
         if (key && process.env[key] === undefined) {
           process.env[key] = value
         }

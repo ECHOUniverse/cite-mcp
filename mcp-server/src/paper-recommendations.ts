@@ -1,8 +1,8 @@
 import { config } from "./config.js"
-import { fetchWithRetry } from "./retry.js"
+import { fetchS2 } from "./s2-fetch.js"
 import { formatAuthors, truncateAbstract } from "./utils.js"
 
-interface RecommendedPaper {
+export interface RecommendedPaper {
   paperId: string
   title: string
   authors: string
@@ -45,14 +45,12 @@ async function getRecommendationsForPaper(
   limit: number,
   fromPool: string,
 ): Promise<RecommendedPaper[]> {
-  const { apiKey, baseUrl } = config.s2
-  const headers: Record<string, string> = {}
-  if (apiKey) headers["x-api-key"] = apiKey
+  const { baseUrl } = config.s2
 
-  const fields = "title,authors,year,abstract,tldr,externalIds,url,citationCount,venue"
-  const resp = await fetchWithRetry(
+  // recommendations 端点不支持 tldr 字段（带它 S2 返回 400），勿加入
+  const fields = "title,authors,year,abstract,externalIds,url,citationCount,venue"
+  const resp = await fetchS2(
     `${baseUrl.replace("/graph/v1", "")}/recommendations/v1/papers/forpaper/${encodeURIComponent(paperId)}?limit=${Math.min(limit, 500)}&from=${fromPool}&fields=${encodeURIComponent(fields)}`,
-    { headers },
   )
   if (!resp.ok) return []
 
@@ -81,11 +79,16 @@ async function getRecommendationsForPaper(
   return results
 }
 
+export interface PaperRecommendationsResult {
+  text: string
+  papers: RecommendedPaper[]
+}
+
 export async function getPaperRecommendations(
   paperId: string,
   limit: number,
   from: string,
-): Promise<string> {
+): Promise<PaperRecommendationsResult> {
   const results = await getRecommendationsForPaper(paperId, limit || 10, from || "recent")
-  return formatRecommendations(results, paperId)
+  return { text: formatRecommendations(results, paperId), papers: results }
 }

@@ -43,11 +43,14 @@ This server provides **academic paper research capabilities** — search across 
 | Capability | Sources | Description |
 |-----------|---------|-------------|
 | 🔍 **Multi-Source Search** | Semantic Scholar + OpenAlex + Crossref | Aggregate search with automatic deduplication |
-| 📖 **Paper Detail** | 3 sources merged | Title, authors, abstract, references, citation count |
+| 📖 **Paper Detail** | 3 sources merged | Title, authors, abstract, references, citation count — optional full citing/cited paper lists |
 | 🎯 **Recommendations** | Semantic Scholar | Related paper discovery |
-| 📊 **Paper Analysis** | Semantic Scholar + OpenAlex + Crossref | Cross-paper comparison table + per-paper summaries |
-| 📝 **Citation Formatting** | — | APA 7th / MLA 9th / GB/T 7714-2015 / BibTeX / Elsevier report |
+| 📊 **Paper Analysis** | Semantic Scholar + OpenAlex + Crossref | Cross-paper comparison table + per-paper summaries + field-trend statistics |
+| 📝 **Citation Formatting** | — | APA 7th / MLA 9th / GB/T 7714-2015 / BibTeX / Elsevier report — optional Crossref/S2-formatted source for single papers |
 | ✍️ **Cite Text** | Semantic Scholar + OpenAlex + Crossref | Insert citations into text, three-section report (body → references → citation notes) |
+| 👤 **Author Search** | Semantic Scholar + OpenAlex | Author lookup by name — affiliations, paper/citation counts, h-index |
+| 🏷️ **Topic Classify** | OpenAlex | Map keywords to the topic hierarchy (domain / field / subfield) |
+| 💰 **Funder Works** | Crossref | Find a funder and its funded research outputs |
 
 ---
 
@@ -161,6 +164,31 @@ Edit `.env` with your API keys:
 An example configuration file (`.mcp.json.example`) is provided in the project root. The steps for each client are below:
 
 </details>
+
+### Option D: HTTP Transport (Streamable HTTP)
+
+For clients that connect over HTTP instead of stdio, the package also ships a stateless HTTP server:
+
+```bash
+# after global install (or npm run start:http from a source build)
+cite-mcp-http
+```
+
+- Endpoint: `POST http://localhost:3000/mcp`
+- Port: `PORT` environment variable (default `3000`)
+- Stateless and sessionless — every request is independent
+
+Client configuration:
+
+```json
+{
+  "mcpServers": {
+    "cite-mcp-http": {
+      "url": "http://localhost:3000/mcp"
+    }
+  }
+}
+```
 
 ### MCP Client Setup
 
@@ -336,6 +364,8 @@ Higher-priority sources override lower-priority ones for the same variable. The 
 | `OPENALEX_API_KEY` | OpenAlex | Higher rate limit (required from 2025) | [Get free key](https://openalex.org/account) |
 | `CROSSREF_MAILTO` | Crossref | Polite pool: ~10x faster | Any email |
 
+`PORT` sets the port for the HTTP transport (`cite-mcp-http`, default `3000`) and has no effect on the stdio server.
+
 ### How the `.env` File Works
 
 The server automatically searches for `.env` files in order (each found file is loaded, only filling variables not yet set):
@@ -350,14 +380,15 @@ Place your `.env` at any of these locations. The file is already in `.gitignore`
 
 ## 🛠️ Tool Reference
 
+All tools declare an `outputSchema` and return `structuredContent` alongside the Markdown text, so MCP clients can also parse results programmatically.
+
 ### Search Tools
 
 | Tool | Best For | Sources | Limit |
 |------|----------|---------|-------|
-| `paper_search` | **Recommended for most users** | S2 → OA → CR (auto fallback) | 10 (default) |
-| `search_semantic_scholar` | CS/AI/NLP papers; advanced queries | S2 only | max 100 |
-| `search_openalex` | Broad multidisciplinary search | OA only | max 50 |
-| `search_crossref` | DOI metadata lookup | CR only | max 50 |
+| `paper_search` | **Recommended for most users** — unified search with auto dedup; `authorId` filters papers by an OpenAlex author ID (e.g. from `author_search`) | all / s2 / openalex / crossref | default 10 (S2 max 100, OA/CR max 50) |
+| `author_search` | Find authors by name — affiliations, paper/citation counts, h-index | s2 / openalex / all | default 10, max 100 |
+| `paper_funder` | Find a funder and its funded works (`funderId` or `funderName`, exactly one required) | Crossref | default 20, max 100 |
 
 **Semantic Scholar Advanced Query Syntax:**
 
@@ -370,26 +401,25 @@ Place your `.env` at any of these locations. The file is already in `.gitignore`
 | `neuro*` | `neuro*` | Prefix match (neural, neuroscience...) |
 | `title:` | `title:transformer` | Search in title only |
 
-### Analysis Tool
+### Analysis Tools
 
 | Tool | Description |
 |------|-------------|
-| `paper_analysis` | Search specified number of papers, return cross-paper overview table + per-paper summaries and data tables. Great for quick literature review. |
+| `paper_analysis` | Search specified number of papers, return cross-paper overview table + per-paper summaries and data tables, ending with field-trend statistics (year trend, work-type distribution, research hotspots). Great for quick literature review. |
+| `topic_classify` | Classify a keyword into the OpenAlex topic hierarchy — `level` 0 = domain (default), 1 = field, 2 = subfield. Returns name, works count, and OpenAlex URL. |
 
 ### Detail Tools
 
 | Tool | Input | Output |
 |------|-------|--------|
-| `paper_detail` | DOI | Merged detail from 3 sources + references |
-| `get_by_s2id` | S2 Paper ID | Detail from Semantic Scholar |
-| `get_by_s2ids_batch` | Array of S2 Paper IDs | Batch detail (up to 500) |
+| `paper_detail` | DOI / S2 Paper ID / batch IDs (up to 500) | Merged detail from 3 sources + references. `includeCitations` / `includeReferences` fetch full citing/cited paper lists from Semantic Scholar (`relatedLimit`, default 10, max 100) |
 
 ### Recommendation & Citation Tools
 
 | Tool | Description |
 |------|-------------|
 | `paper_recommendations` | Find related papers via S2 recommendations |
-| `citation` | Format: APA / MLA / GB/T 7714-2015 / BibTeX / Elsevier three-section report |
+| `citation` | Format: APA / MLA / GB/T 7714-2015 / BibTeX / Elsevier three-section report. Single-paper mode accepts `source`: `internal` (default) / `crossref` (APA/MLA/BibTeX via content negotiation) / `s2` (BibTeX) — falls back to internal formatting with a note when unsupported |
 | `cite_text` | Auto-insert citations into text: extract claims → S2-first search → three-section report |
 
 ---

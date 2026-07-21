@@ -3,6 +3,9 @@
     "cite-mcp": {
       "command": "npx",
       "args": ["cite-mcp"]
+    },
+    "cite-mcp-http": {
+      "url": "http://localhost:3000/mcp"
     }
   }
 }

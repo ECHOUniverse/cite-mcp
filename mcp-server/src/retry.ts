@@ -17,8 +17,11 @@ export async function fetchWithRetry(
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const resp = await fetch(url, init)
-      if ((resp.status >= 500 || resp.status === 429) && attempt < maxRetries) {
+      const resp = await fetch(url, { ...init, signal: AbortSignal.timeout(30_000) })
+      // 仅 5xx 服务端错误值得重试；4xx（403 key 无效 / 429 共享池限流等）重试无益且放大延迟
+      if (resp.status >= 500 && attempt < maxRetries) {
+        // Drain the body so the keep-alive connection can be reused
+        await resp.text().catch(() => "")
         await sleep(baseDelayMs * Math.pow(2, attempt))
         continue
       }
@@ -45,4 +48,27 @@ export function stagger<T>(
       return fn()
     })()
   })
+}
+
+export async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<PromiseSettledResult<R>[]> {
+  const results: PromiseSettledResult<R>[] = new Array(items.length)
+  let next = 0
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++
+      try {
+        results[i] = { status: "fulfilled", value: await fn(items[i]) }
+      } catch (reason) {
+        results[i] = { status: "rejected", reason }
+      }
+    }
+  }
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, () => worker()),
+  )
+  return results
 }

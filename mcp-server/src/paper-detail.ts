@@ -1,6 +1,11 @@
 import { config } from "./config.js"
 import { fetchWithRetry, stagger } from "./retry.js"
-import { formatAuthors } from "./utils.js"
+import { fetchS2 } from "./s2-fetch.js"
+import { formatAuthors, stripMarkup } from "./utils.js"
+import { trackOpenAlexCall } from "./usage.js"
+
+// config.s2.fields + citationStyles（roadmap 3.5 构建块：原始值透传，后续 wave 再暴露）
+const S2_FIELDS = `${config.s2.fields},citationStyles`
 
 export interface PaperDetail {
   title: string
@@ -8,6 +13,7 @@ export interface PaperDetail {
   year: number | null
   abstract: string
   tldr?: string
+  citationStyles?: Record<string, string>
   doi: string | null
   url: string
   venue: string | null
@@ -63,8 +69,8 @@ export async function getByDoiCrossref(doi: string): Promise<PaperDetail | null>
   return {
     title: item.title?.[0] || "",
     authors,
-    year: item.published?.date_parts?.[0]?.[0] || item.created?.date_parts?.[0]?.[0] || null,
-    abstract: item.abstract || "",
+    year: item.published?.["date-parts"]?.[0]?.[0] || item.created?.["date-parts"]?.[0]?.[0] || null,
+    abstract: item.abstract ? stripMarkup(item.abstract) : "",
     doi: item.DOI || doi,
     url: item.URL || `${config.doi.baseUrl}/${doi}`,
     venue,
@@ -75,14 +81,9 @@ export async function getByDoiCrossref(doi: string): Promise<PaperDetail | null>
 }
 
 export async function getByDoiSemantic(doi: string): Promise<PaperDetail | null> {
-  const { apiKey, baseUrl, fields } = config.s2
-  const headers: Record<string, string> = {}
-  if (apiKey) headers["x-api-key"] = apiKey
+  const { baseUrl } = config.s2
 
-  const resp = await fetchWithRetry(
-    `${baseUrl}/paper/DOI:${encodeURIComponent(doi)}?fields=${fields}`,
-    { headers },
-  )
+  const resp = await fetchS2(`${baseUrl}/paper/DOI:${encodeURIComponent(doi)}?fields=${S2_FIELDS}`)
   if (!resp.ok) return null
 
   const p = await resp.json()
@@ -100,12 +101,45 @@ export async function getByDoiSemantic(doi: string): Promise<PaperDetail | null>
     year: p.year || null,
     abstract: p.abstract || "",
     tldr: p.tldr?.text || undefined,
+    citationStyles: p.citationStyles || undefined,
     doi: p.externalIds?.DOI || doi,
     url: p.url || `${config.doi.baseUrl}/${doi}`,
     venue: p.venue || null,
     citationCount: p.citationCount ?? null,
     references: refs,
     source: "Semantic Scholar",
+  }
+}
+
+// referenced_works are raw OpenAlex IDs; batch-fetch real titles in one request, fall back to ID display
+async function resolveOpenAlexRefs(ids: string[]): Promise<{ title: string; doi: null; year: number | null }[]> {
+  const fallback = ids.map((id) => ({ title: id, doi: null, year: null }))
+  if (ids.length === 0) return fallback
+  try {
+    const { mailto, apiKey, baseUrl } = config.openalex
+    const shortIds = ids.map((id) => id.replace(/^https?:\/\/openalex\.org\//, ""))
+    const params = new URLSearchParams({
+      filter: `ids.openalex:${shortIds.join("|")}`,
+      select: "id,title,publication_year",
+      per_page: String(ids.length),
+    })
+    if (mailto) params.set("mailto", mailto)
+    if (apiKey) params.set("api_key", apiKey)
+    trackOpenAlexCall("refs")
+    const resp = await fetchWithRetry(`${baseUrl}/works?${params}`)
+    if (!resp.ok) return fallback
+    const data = await resp.json()
+    const byId = new Map<string, any>()
+    for (const w of data.results || []) {
+      byId.set(String(w.id || "").replace(/^https?:\/\/openalex\.org\//, ""), w)
+    }
+    return ids.map((id, i) => {
+      const w = byId.get(shortIds[i])
+      if (!w?.title) return fallback[i]
+      return { title: w.title, doi: null, year: w.publication_year || null }
+    })
+  } catch {
+    return fallback
   }
 }
 
@@ -116,6 +150,7 @@ export async function getByOpenAlex(doi: string): Promise<PaperDetail | null> {
   if (apiKey) params.set("api_key", apiKey)
   const qs = params.toString()
   const url = `${baseUrl}/works/doi:${encodeURIComponent(doi)}${qs ? `?${qs}` : ""}`
+  trackOpenAlexCall("detail")
   const resp = await fetchWithRetry(url)
   if (!resp.ok) return null
 
@@ -139,11 +174,7 @@ export async function getByOpenAlex(doi: string): Promise<PaperDetail | null> {
     abstract = words.filter(Boolean).join(" ")
   }
 
-  const refs = (w.referenced_works || []).slice(0, 10).map((id: string) => ({
-    title: id,
-    doi: null,
-    year: null,
-  }))
+  const refs = await resolveOpenAlexRefs((w.referenced_works || []).slice(0, 10))
 
   return {
     title: w.title || "",
@@ -160,14 +191,9 @@ export async function getByOpenAlex(doi: string): Promise<PaperDetail | null> {
 }
 
 async function getByS2Id(paperId: string): Promise<PaperDetail | null> {
-  const { apiKey, baseUrl, fields } = config.s2
-  const headers: Record<string, string> = {}
-  if (apiKey) headers["x-api-key"] = apiKey
+  const { baseUrl } = config.s2
 
-  const resp = await fetchWithRetry(
-    `${baseUrl}/paper/${encodeURIComponent(paperId)}?fields=${fields}`,
-    { headers },
-  )
+  const resp = await fetchS2(`${baseUrl}/paper/${encodeURIComponent(paperId)}?fields=${S2_FIELDS}`)
   if (!resp.ok) return null
 
   const p = await resp.json()
@@ -185,6 +211,7 @@ async function getByS2Id(paperId: string): Promise<PaperDetail | null> {
     year: p.year || null,
     abstract: p.abstract || "",
     tldr: p.tldr?.text || undefined,
+    citationStyles: p.citationStyles || undefined,
     doi: p.externalIds?.DOI || null,
     url: p.url || "",
     venue: p.venue || null,
@@ -195,15 +222,13 @@ async function getByS2Id(paperId: string): Promise<PaperDetail | null> {
 }
 
 async function getByS2IdsBatch(paperIds: string[]): Promise<PaperDetail[]> {
-  const { apiKey, baseUrl, fields } = config.s2
-  const headers: Record<string, string> = { "Content-Type": "application/json" }
-  if (apiKey) headers["x-api-key"] = apiKey
+  const { baseUrl } = config.s2
 
-  const resp = await fetchWithRetry(
-    `${baseUrl}/paper/batch?fields=${encodeURIComponent(fields)}`,
+  const resp = await fetchS2(
+    `${baseUrl}/paper/batch?fields=${encodeURIComponent(S2_FIELDS)}`,
     {
       method: "POST",
-      headers,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids: paperIds.slice(0, 500) }),
     },
   )
@@ -231,6 +256,7 @@ async function getByS2IdsBatch(paperIds: string[]): Promise<PaperDetail[]> {
       year: p.year || null,
       abstract: p.abstract || "",
       tldr: p.tldr?.text || undefined,
+      citationStyles: p.citationStyles || undefined,
       doi: p.externalIds?.DOI || null,
       url: p.url || "",
       venue: p.venue || null,
@@ -242,16 +268,170 @@ async function getByS2IdsBatch(paperIds: string[]): Promise<PaperDetail[]> {
   return results
 }
 
+// -- S2 citations/references 端点（roadmap 3.1 构建块） --
+
+export interface RelatedPaper {
+  title: string
+  authors: string
+  year: number | null
+  doi: string | null
+  url: string
+  citationCount: number | null
+}
+
+/** S2 paper id 归一化：裸 DOI（10.xxxx/...）自动补 DOI: 前缀，其余原样透传 */
+export function toS2PaperId(paperId: string): string {
+  const id = paperId.trim()
+  return /^10\.\d{4,9}\//.test(id) ? `DOI:${id}` : id
+}
+
+/** 将 citingPaper/citedPaper 条目映射为统一结构；容忍稀疏元数据，url 回退链：p.url → doi.org → S2 页面 */
+export function mapRelatedPaper(p: any): RelatedPaper {
+  const doi = p?.externalIds?.DOI || null
+  const url =
+    p?.url ||
+    (doi ? `${config.doi.baseUrl}/${doi}` : "") ||
+    (p?.paperId ? `https://www.semanticscholar.org/paper/${p.paperId}` : "")
+  return {
+    title: p?.title || "",
+    authors: formatAuthors(p?.authors || []),
+    year: p?.year || null,
+    doi,
+    url,
+    citationCount: p?.citationCount ?? null,
+  }
+}
+
+async function getRelatedPapers(
+  paperId: string,
+  limit: number,
+  kind: "citations" | "references",
+): Promise<RelatedPaper[] | null> {
+  const id = toS2PaperId(paperId)
+  if (!id) return null
+  const { baseUrl } = config.s2
+  const clamped = Math.min(100, Math.max(1, Math.trunc(limit) || 1))
+  const fields = "title,authors,year,externalIds,url,citationCount"
+
+  const resp = await fetchS2(
+    `${baseUrl}/paper/${encodeURIComponent(id)}/${kind}?limit=${clamped}&fields=${fields}`,
+  )
+  if (!resp.ok) return null
+
+  const data = await resp.json()
+  const key = kind === "citations" ? "citingPaper" : "citedPaper"
+  const list: any[] = Array.isArray(data?.data) ? data.data : []
+  return list
+    .map((entry: any) => entry?.[key])
+    .filter(Boolean)
+    .map(mapRelatedPaper)
+}
+
+export function getPaperCitations(paperId: string, limit: number): Promise<RelatedPaper[] | null> {
+  return getRelatedPapers(paperId, limit, "citations")
+}
+
+export function getPaperReferences(paperId: string, limit: number): Promise<RelatedPaper[] | null> {
+  return getRelatedPapers(paperId, limit, "references")
+}
+
+// -- 被引/参考文献附加区块（paper_detail 的 includeCitations/includeReferences 参数） --
+
+export interface RelatedOptions {
+  includeCitations?: boolean
+  includeReferences?: boolean
+  relatedLimit?: number
+}
+
+/** 作者串截断：最多保留前 max 位，超出以「等」结尾 */
+function truncateAuthorList(authors: string, max: number = 3): string {
+  const parts = authors.split(";").map((s) => s.trim()).filter(Boolean)
+  if (parts.length <= max) return parts.join("; ")
+  return `${parts.slice(0, max).join("; ")} 等`
+}
+
+const RELATED_TITLES = { citations: "被引论文", references: "参考文献" } as const
+
+interface RelatedSectionData {
+  text: string
+  /** null = 端点请求失败/数据源不可用；[] = 正常但无记录 */
+  papers: RelatedPaper[] | null
+}
+
+async function formatRelatedSection(
+  paperId: string,
+  limit: number,
+  kind: "citations" | "references",
+): Promise<RelatedSectionData> {
+  const title = RELATED_TITLES[kind]
+  const header = `\n\n=== ${title}（前 ${limit} 条）===\n\n`
+  let papers: RelatedPaper[] | null
+  try {
+    // S2 端点网络错误会抛错（与 getByDoiSemantic 一致），此处兜底为提示文案，绝不让详情响应崩溃
+    papers = kind === "citations"
+      ? await getPaperCitations(paperId, limit)
+      : await getPaperReferences(paperId, limit)
+  } catch {
+    return { text: `${header}获取失败，请稍后重试。`, papers: null }
+  }
+  if (papers === null) return { text: `${header}数据源暂不可用，未能获取${title}列表。`, papers: null }
+  if (papers.length === 0) return { text: `${header}暂无${title}记录。`, papers: [] }
+  const items = papers.slice(0, limit).map((p, i) => {
+    const authors = truncateAuthorList(p.authors)
+    const head = `${i + 1}. ${p.title || "无标题"}${p.year ? ` (${p.year})` : ""}${authors ? ` — ${authors}` : ""}, 被引数 ${p.citationCount ?? "未知"}`
+    return `${head}\n   DOI: ${p.doi || "无"} | URL: ${p.url || "无"}`
+  })
+  return { text: header + items.join("\n\n"), papers: papers.slice(0, limit) }
+}
+
+interface RelatedSectionsResult {
+  text: string
+  /** 仅在 includeCitations 时出现；null 表示获取失败/不可用 */
+  citations?: RelatedPaper[] | null
+  /** 仅在 includeReferences 时出现；null 表示获取失败/不可用 */
+  references?: RelatedPaper[] | null
+}
+
+async function collectRelatedSections(
+  paperId: string,
+  opts: RelatedOptions,
+  label?: string,
+): Promise<RelatedSectionsResult> {
+  const limit = opts.relatedLimit ?? 10
+  const jobs: { kind: "citations" | "references"; promise: Promise<RelatedSectionData> }[] = []
+  if (opts.includeCitations) jobs.push({ kind: "citations", promise: formatRelatedSection(paperId, limit, "citations") })
+  if (opts.includeReferences) jobs.push({ kind: "references", promise: formatRelatedSection(paperId, limit, "references") })
+  if (jobs.length === 0) return { text: "" }
+  const sections = await Promise.all(jobs.map((j) => j.promise))
+  const result: RelatedSectionsResult = {
+    text: (label ? `\n\n--- ${label} ---` : "") + sections.map((s) => s.text).join(""),
+  }
+  for (let i = 0; i < jobs.length; i++) {
+    if (jobs[i].kind === "citations") result.citations = sections[i].papers
+    else result.references = sections[i].papers
+  }
+  return result
+}
+
 // -- Raw data export for internal reuse --
 
+// Strips URL / "doi:" prefixes and surrounding whitespace; idempotent
+function cleanDoi(doi: string): string {
+  return doi
+    .trim()
+    .replace(/^https?:\/\/(dx\.)?doi\.org\//i, "")
+    .replace(/^doi:\s*/i, "")
+    .trim()
+}
+
 export async function getPaperDetailRaw(doi: string): Promise<PaperDetail | null> {
-  const cleanDoi = doi.trim().replace(/^https?:\/\/doi\.org\//, "")
+  const cleaned = cleanDoi(doi)
 
   const [cr, s2, oa] = await Promise.allSettled(
     stagger([
-      () => getByDoiCrossref(cleanDoi),
-      () => getByDoiSemantic(cleanDoi),
-      () => getByOpenAlex(cleanDoi),
+      () => getByDoiCrossref(cleaned),
+      () => getByDoiSemantic(cleaned),
+      () => getByOpenAlex(cleaned),
     ]),
   )
 
@@ -267,14 +447,20 @@ export async function getPaperDetailRaw(doi: string): Promise<PaperDetail | null
 
 // -- Exported tools --
 
-export async function getPaperDetail(doi: string): Promise<string> {
-  const cleanDoi = doi.trim().replace(/^https?:\/\/doi\.org\//, "")
+export interface PaperDetailData {
+  text: string
+  /** 单篇模式 0-1 条（展示用 best）；批量模式为全部命中 */
+  results: PaperDetail[]
+}
+
+export async function getPaperDetail(doi: string): Promise<PaperDetailData> {
+  const cleaned = cleanDoi(doi)
 
   const [cr, s2, oa] = await Promise.allSettled(
     stagger([
-      () => getByDoiCrossref(cleanDoi),
-      () => getByDoiSemantic(cleanDoi),
-      () => getByOpenAlex(cleanDoi),
+      () => getByDoiCrossref(cleaned),
+      () => getByDoiSemantic(cleaned),
+      () => getByOpenAlex(cleaned),
     ]),
   )
 
@@ -285,7 +471,7 @@ export async function getPaperDetail(doi: string): Promise<string> {
   ]
 
   if (results.length === 0) {
-    return `未找到 DOI: ${doi} 对应的论文。请检查 DOI 是否正确。`
+    return { text: `未找到 DOI: ${doi} 对应的论文。请检查 DOI 是否正确。`, results: [] }
   }
 
   const best = results.find((r) => r.abstract && r.abstract.length > 50) || results[0]
@@ -294,39 +480,52 @@ export async function getPaperDetail(doi: string): Promise<string> {
   output += formatDetail(best)
 
   if (results.length > 1) {
-    output += "\n\n=== 其他数据源补充信息 ===\n"
+    // 先收集补充行，确有内容才输出区块标题（避免源故障时留下空标题区块）
+    const extraLines: string[] = []
     for (const r of results) {
       if (r === best) continue
       const extra: string[] = []
       if (r.citationCount !== null && best.citationCount === null) extra.push(`引用数: ${r.citationCount}`)
       if (r.venue && !best.venue) extra.push(`期刊: ${r.venue}`)
       if (extra.length > 0) {
-        output += `\n[${r.source}] ${extra.join(", ")}`
+        extraLines.push(`[${r.source}] ${extra.join(", ")}`)
       }
+    }
+    if (extraLines.length > 0) {
+      output += "\n\n=== 其他数据源补充信息 ===\n\n" + extraLines.join("\n")
     }
   }
 
-  return output
+  return { text: output, results: [best] }
 }
 
-export async function getPaperDetailByS2Id(paperId: string): Promise<string> {
+export async function getPaperDetailByS2Id(paperId: string): Promise<PaperDetailData> {
   const result = await getByS2Id(paperId)
   if (!result) {
-    return `未找到 Paper ID: ${paperId} 对应的论文。`
+    return { text: `未找到 Paper ID: ${paperId} 对应的论文。`, results: [] }
   }
-  return formatDetail(result)
+  return { text: formatDetail(result), results: [result] }
 }
 
-export async function getPaperDetailBatch(paperIds: string[]): Promise<string> {
+export async function getPaperDetailBatch(paperIds: string[]): Promise<PaperDetailData> {
   const ids = paperIds.filter(Boolean)
   if (ids.length === 0) {
-    return "请提供至少一个 Paper ID。"
+    return { text: "请提供至少一个 Paper ID。", results: [] }
   }
   const results = await getByS2IdsBatch(ids)
   if (results.length === 0) {
-    return "未找到任何对应的论文详情。"
+    return { text: "未找到任何对应的论文详情。", results: [] }
   }
-  return results.map(formatDetail).join("\n\n---\n\n")
+  return { text: results.map(formatDetail).join("\n\n---\n\n"), results }
+}
+
+export interface PaperDetailUnifiedResult extends PaperDetailData {
+  /** 单篇模式（doi/paperId）且 includeCitations 时出现 */
+  citations?: RelatedPaper[] | null
+  /** 单篇模式（doi/paperId）且 includeReferences 时出现 */
+  references?: RelatedPaper[] | null
+  /** 批量模式（paperIds）且 include* 时出现，按查询 ID 分组 */
+  relatedByPaperId?: Record<string, { citations?: RelatedPaper[] | null; references?: RelatedPaper[] | null }>
 }
 
 // Unified detail entry: dispatches by doi / paperId / paperIds
@@ -334,15 +533,44 @@ export async function getPaperDetailUnified(args: {
   doi?: string
   paperId?: string
   paperIds?: string[]
-}): Promise<string> {
+  includeCitations?: boolean
+  includeReferences?: boolean
+  relatedLimit?: number
+}): Promise<PaperDetailUnifiedResult> {
+  const related: RelatedOptions = {
+    includeCitations: args.includeCitations,
+    includeReferences: args.includeReferences,
+    relatedLimit: args.relatedLimit,
+  }
   if (args.doi) {
-    return getPaperDetail(args.doi)
+    // 被引/参考文献端点经 toS2PaperId 自动补 DOI: 前缀，doi 输入始终可用
+    const detail = await getPaperDetail(args.doi)
+    const rel = await collectRelatedSections(args.doi, related)
+    return { text: detail.text + rel.text, results: detail.results, citations: rel.citations, references: rel.references }
   }
   if (args.paperId) {
-    return getPaperDetailByS2Id(args.paperId)
+    const detail = await getPaperDetailByS2Id(args.paperId)
+    const rel = await collectRelatedSections(args.paperId, related)
+    return { text: detail.text + rel.text, results: detail.results, citations: rel.citations, references: rel.references }
   }
   if (args.paperIds && args.paperIds.length > 0) {
-    return getPaperDetailBatch(args.paperIds)
+    const ids = args.paperIds.filter(Boolean)
+    const detail = await getPaperDetailBatch(ids)
+    const sections = await Promise.all(
+      ids.map((id) => collectRelatedSections(id, related, `以下列表对应 Paper ID: ${id}`)),
+    )
+    const out: PaperDetailUnifiedResult = {
+      text: detail.text + sections.map((s) => s.text).join(""),
+      results: detail.results,
+    }
+    if (related.includeCitations || related.includeReferences) {
+      const byId: PaperDetailUnifiedResult["relatedByPaperId"] = {}
+      for (let i = 0; i < ids.length; i++) {
+        byId[ids[i]] = { citations: sections[i].citations, references: sections[i].references }
+      }
+      out.relatedByPaperId = byId
+    }
+    return out
   }
-  return "请提供 doi、paperId 或 paperIds 参数之一。"
+  return { text: "请提供 doi、paperId 或 paperIds 参数之一。", results: [] }
 }

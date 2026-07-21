@@ -1,21 +1,24 @@
 import { PaperResult, searchSemanticScholar, searchOpenAlex, searchCrossref, deduplicate } from "./paper-search.js"
 import { formatElsevierRef } from "./citation.js"
 import { stagger } from "./retry.js"
+import { paperKey } from "./utils.js"
 
 export interface ClaimInput {
   sentence: string
   context?: string
 }
 
-interface ClaimMatch {
+export interface ClaimMatch {
   claim: ClaimInput
   papers: PaperResult[]
 }
 
 export interface CiteTextResult {
   bodyText: string
-  references: { authors: string; title: string; year: number; venue: string; doi?: string; url: string; volume?: string; issue?: string; pages?: string }[]
+  references: { authors: string; title: string; year: number | null; venue: string; doi?: string; url: string; volume?: string; issue?: string; pages?: string }[]
   tableRows: { index: number; title: string; url: string; summary: string; description: string }[]
+  /** 每个论点命中的参考文献编号（1 起，与 references 下标对应），按输入 claims 顺序 */
+  claims: { sentence: string; refNums: number[] }[]
 }
 
 // Extract key terms from sentence: take meaningful words (>3 chars)
@@ -142,6 +145,84 @@ function buildBodyText(text: string, positions: { claim: ClaimInput; start: numb
   return result
 }
 
+// Build the three-section report data from search results (pure function, unit-testable)
+export function buildCiteTextResult(text: string, claimMatches: ClaimMatch[]): CiteTextResult {
+  // 1. Global deduplication
+  const allPapers: PaperResult[] = []
+  for (const cm of claimMatches) {
+    allPapers.push(...cm.papers)
+  }
+  const uniquePapers = deduplicate(allPapers)
+
+  // 2. Assign papers to claims by stable paper key — each claim's search produces
+  //    distinct object instances, so identity comparison would drop shared papers
+  const keyToIndex = new Map<string, number>()
+  uniquePapers.forEach((p, i) => {
+    const key = paperKey(p)
+    if (key && !keyToIndex.has(key)) keyToIndex.set(key, i)
+  })
+
+  const positions = findClaimPositions(text, claimMatches.map(cm => cm.claim))
+  const claimRefMap: Map<string, number[]> = new Map()
+
+  for (const cm of claimMatches) {
+    const refNums: number[] = []
+    for (const paper of cm.papers) {
+      const globalIdx = keyToIndex.get(paperKey(paper))
+      if (globalIdx !== undefined && !refNums.includes(globalIdx + 1)) {
+        refNums.push(globalIdx + 1)
+      }
+    }
+    claimRefMap.set(cm.claim.sentence, refNums)
+  }
+
+  // 3. Build body text with markers
+  const posWithRefs = positions.map(p => ({
+    ...p,
+    refNums: claimRefMap.get(p.claim.sentence) || [],
+  }))
+  const bodyText = buildBodyText(text, posWithRefs)
+
+  // 4. Build reference list entries — year stays null when unknown (no forced 0)
+  const references = uniquePapers.map(p => ({
+    authors: p.authors,
+    title: p.title,
+    year: p.year,
+    venue: p.venue || "未知",
+    doi: p.doi || undefined,
+    url: p.url || (p.doi ? `https://doi.org/${p.doi}` : ""),
+  }))
+
+  // 5. Build table rows — attribute each paper to the claim that matched it.
+  //    Match by paperKey; empty keys never match, so DOI-less/title-less papers
+  //    are never cross-attributed via null === null.
+  const tableRows = uniquePapers.map((p, i) => {
+    const doiUrl = p.doi ? `https://doi.org/${p.doi}` : p.url || "无"
+    const key = paperKey(p)
+    const relatedClaim = key
+      ? claimMatches.find(cm => cm.papers.some(pp => paperKey(pp) === key))
+      : undefined
+    const summary = relatedClaim ? relatedClaim.claim.sentence : ""
+    return {
+      index: i + 1,
+      title: p.title,
+      url: doiUrl,
+      summary,
+      description: "",
+    }
+  })
+
+  return {
+    bodyText,
+    references,
+    tableRows,
+    claims: claimMatches.map((cm) => ({
+      sentence: cm.claim.sentence,
+      refNums: claimRefMap.get(cm.claim.sentence) || [],
+    })),
+  }
+}
+
 export async function citeText(
   text: string,
   claims: ClaimInput[],
@@ -154,63 +235,8 @@ export async function citeText(
     claimMatches.push({ claim, papers })
   }
 
-  // 2. Global deduplication by DOI
-  const allPapers: PaperResult[] = []
-  for (const cm of claimMatches) {
-    allPapers.push(...cm.papers)
-  }
-  const uniquePapers = deduplicate(allPapers)
-
-  // 3. Assign papers to claims (best match first)
-  const positions = findClaimPositions(text, claims)
-  const claimRefMap: Map<string, number[]> = new Map()
-
-  for (const cm of claimMatches) {
-    const matchedPapers = cm.papers.filter(p => uniquePapers.includes(p))
-    const refNums: number[] = []
-    for (const paper of matchedPapers) {
-      const globalIdx = uniquePapers.indexOf(paper)
-      if (globalIdx !== -1 && !refNums.includes(globalIdx + 1)) {
-        refNums.push(globalIdx + 1)
-      }
-    }
-    claimRefMap.set(cm.claim.sentence, refNums)
-  }
-
-  // 4. Build body text with markers
-  const posWithRefs = positions.map(p => ({
-    ...p,
-    refNums: claimRefMap.get(p.claim.sentence) || [],
-  }))
-  const bodyText = buildBodyText(text, posWithRefs)
-
-  // 5. Build reference list entries
-  const references = uniquePapers.map(p => ({
-    authors: p.authors,
-    title: p.title,
-    year: p.year ?? 0,
-    venue: p.venue || "未知",
-    doi: p.doi || undefined,
-    url: p.url || (p.doi ? `https://doi.org/${p.doi}` : ""),
-  }))
-
-  // 6. Build table rows
-  const tableRows = uniquePapers.map((p, i) => {
-    const doiUrl = p.doi ? `https://doi.org/${p.doi}` : p.url || "无"
-    const relatedClaim = claimMatches.find(cm =>
-      cm.papers.some(pp => pp.doi === p.doi || pp.title === p.title)
-    )
-    const summary = relatedClaim ? relatedClaim.claim.sentence : ""
-    return {
-      index: i + 1,
-      title: p.title,
-      url: doiUrl,
-      summary,
-      description: "",
-    }
-  })
-
-  return { bodyText, references, tableRows }
+  // 2. Build report data (dedup → ref numbers → body text → references → table)
+  return buildCiteTextResult(text, claimMatches)
 }
 
 // Format the three-section report
