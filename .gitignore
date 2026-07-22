@@ -56,6 +56,9 @@ opencode.jsonc
 # Claude Code project instructions (local override)
 /CLAUDE.md
 
+# Codex
+.codex
+
 # Project planning documents (local only)
 /ROADMAP.md
 /IMPLEMENTATION_PLAN_P1P2.md
